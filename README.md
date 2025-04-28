@@ -1,8 +1,18 @@
 # ChatMesh
 
 *Um chat distribuído P2P*
-
 - Por que ChatMesh? Em inglês, "mesh" significa "malha". No contexto de redes de computadores e Wi-Fi, "mesh" se refere a um sistema de rede onde múltiplos dispositivos (como roteadores) se conectam entre si para criar uma rede de cobertura ampla e consistente.
+
+
+## INTEGRANTES 
+[João Antonio dos Santos Ilario](https://github.com/JoaoPalmasBR)
+
+[Emmanuel de Oliveira Peralta](https://github.com/Emmanuelperalta8)
+
+[Felipe Nóbrega Cardoso Pardo](https://github.com/FelipeNoobrega)
+
+[Nathan Aguiar Silva](https://github.com/nathansilvaa)
+
 
 ## Objetivo do Projeto
 
