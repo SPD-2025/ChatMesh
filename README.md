@@ -48,3 +48,8 @@ Desenvolver uma solução computacional que explore os conceitos de paralelismo 
 - Apresentação
   - Demonstrar o funcionamento da solução.
   - Discutir desafios e possíveis melhorias.
+
+
+### Link para dicas de Markdown
+
+[Markdown Guide](https://www.markdownguide.org/cheat-sheet/)
