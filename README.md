@@ -15,9 +15,14 @@ Projeto de Desenvolvimento de Soluções com Sistemas Paralelos e Distribuídos
 Desenvolver uma solução computacional que explore os conceitos de paralelismo e distribuição para resolver um problema real, utilizando ferramentas e frameworks que simplifiquem a implementação.
 
 ### Etapas da Atividade:
-- Definição do Problema
+- Definição do Problema `28-04-2025`
   - Escolher um problema que se beneficie de paralelismo ou distribuição.
+    - Fazer um chat distribuido usando as tecnicas P2P
   - Justificar por que a abordagem paralela/distribuída é vantajosa.
+    - Evitar que a esturura dependa de um único servidor caindo e derrubando o sistema.
+    - Melhor escalabilidade (mais usuários = mais nós).
+    - Melhor tolerância a falhas.
+    - Menor latência entre peers próximos.
 
 - Projeto da Solução
   - Definir a arquitetura (ex.: mestre-trabalhador, MapReduce, microsserviços).
