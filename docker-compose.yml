@@ -1,37 +1,37 @@
 services:
-    servidor:
-        build: ./servidor
-        ports:
-            - "12345:12345"
-        volumes:
-            - historico:/historico
-        networks:
-            - rede_lances
-    cliente:
-        build: ./cliente
-        depends_on:
-            - servidor
-        volumes:
-            - historico:/historico
-        networks:
-            - rede_lances
-        stdin_open: true  # importante para terminal interativo
-        tty: true         # importante para terminal interativo
-    # app2:
-    #     build: ./app
-    #     ports:
-    #         - "5002:5000"
-    #     volumes:
-    #         - ./mensagens:/mensagens
-    #         - ./certificados:/certificados
-    #     networks:
-    #         - rede_mensagens
-    #     environment:
-    #         - NOME_INSTANCIA=app2
+  chat:
+    build: ./chat
+    ports:
+      - "12345:12345"
+    volumes:
+      - conversas:/conversas
+    networks:
+      - rede_chat
+  # cliente:
+  #     build: ./cliente
+  #     depends_on:
+  #         - servidor
+  #     volumes:
+  #         - historico:/historico
+  #     networks:
+  #         - rede_lances
+  #     stdin_open: true  # importante para terminal interativo
+  #     tty: true         # importante para terminal interativo
+  # app2:
+  #     build: ./app
+  #     ports:
+  #         - "5002:5000"
+  #     volumes:
+  #         - ./mensagens:/mensagens
+  #         - ./certificados:/certificados
+  #     networks:
+  #         - rede_mensagens
+  #     environment:
+  #         - NOME_INSTANCIA=app2
 
 volumes:
-    historico:
+  conversas:
 
 networks:
-    rede_lances:
-        driver: bridge
+  rede_chat:
+    driver: bridge
