@@ -13,6 +13,8 @@ services:
       - "5000:5000"
     networks:
       - chatmesh-net
+    volumes:
+      - logs-volume:/logs
 
   peer2:
     build: ./chat
@@ -26,7 +28,12 @@ services:
       - "5001:5001"
     networks:
       - chatmesh-net
+    volumes:
+      - logs-volume:/logs
 
 networks:
   chatmesh-net:
     driver: bridge
+
+volumes:
+  logs-volume:
