@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>ChatMesh Interface</title>
-    <meta http-equiv="refresh" content="5"> <!-- Auto-refresh a cada 5 segundos -->
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -14,11 +13,23 @@
         h1 {
             color: #00FFFF;
         }
+        .painel {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #112240;
+            border-radius: 8px;
+            box-shadow: 0 0 10px #00ffff44;
+        }
+        .painel div {
+            margin-bottom: 8px;
+        }
         .mensagem {
             margin: 10px 0;
             padding: 10px;
             background-color: #112240;
             border-radius: 5px;
+            box-shadow: 0 0 5px #00ffff22;
+            animation: fadeIn 0.5s ease-in-out;
         }
         .mensagem strong {
             color: #64FFDA;
@@ -56,11 +67,28 @@
             background-color: #64FFDA;
             color: #0A192F;
         }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
     </style>
 </head>
 <body>
 
 <h1>ChatMesh 📡</h1>
+
+<div class="painel">
+    <h2>Status dos Peers</h2>
+    {% for peer, online in status_peers.items() %}
+        <div>{{ peer }}: {% if online %}🟢 Online{% else %}🔴 Offline{% endif %}</div>
+    {% endfor %}
+</div>
+
+<div class="painel">
+    <h2>Métricas</h2>
+    <div>Mensagens Enviadas: {{ enviados }}</div>
+    <div>Mensagens Recebidas: {{ recebidos }}</div>
+</div>
 
 <div class="filters">
     <a href="/" class="{{ 'active' if not peer_filter else '' }}">Todos</a>
@@ -77,9 +105,18 @@
 </div>
 
 <form action="/send" method="post">
-    <input type="text" name="mensagem" placeholder="Digite uma mensagem para Peer1..." required autofocus="autofocus">
+    <input type="text" name="mensagem" placeholder="Digite uma mensagem para Peer1..." required>
     <input type="submit" value="Enviar">
 </form>
+
+<script>
+    const socket = new WebSocket("ws://localhost:8000/ws");
+    socket.onmessage = function(event) {
+        if (event.data === "refresh") {
+            location.reload();
+        }
+    };
+</script>
 
 </body>
 </html>

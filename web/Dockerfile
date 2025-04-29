@@ -2,14 +2,15 @@
 FROM python:3.11-slim
 
 # Diretório de trabalho dentro do container
-WORKDIR /web
+WORKDIR /app
 
 # Copiar e instalar as dependências
-COPY requirements.txt .
+COPY . .
+
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar o restante do código
 COPY . .
 
-# Comando para rodar (o docker-compose já sobrescreve, mas deixar aqui por segurança)
+# Executar Uvicorn diretamente, sem --reload em produção
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
