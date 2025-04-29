@@ -2,26 +2,28 @@
 version: "3.8"
 
 services:
-  # Peer escalável com nomes automáticos
-  peer:
+  # Peer 1
+  peer1:
     build: ./chat
-    ports:
-      - "5000"
+    container_name: peer1
     environment:
-      - PORTA_RECEBIMENTO=5000
+      - PORTA_RECEBIMENTO=5001
+      - PEER_NAME=Peer-1
+    ports:
+      - "5001:5001"
     volumes:
       - logs-volume:/logs
     networks:
       - chatmesh-net
 
-  # Web 1 vinculado ao peer_1 (porta 8001)
   web1:
     build: ./web
+    container_name: web1
     ports:
       - "8001:8001"
     environment:
       - FRONTEND_PORT=8001
-      - PEER_DESTINO=peer_1:5000
+      - PEER_DESTINO=peer1:5001
       - PEER_NAME=Peer-1
     volumes:
       - logs-volume:/logs
@@ -29,14 +31,28 @@ services:
       - chatmesh-net
     command: uvicorn main:app --host 0.0.0.0 --port 8001
 
-  # Web 2 vinculado ao peer_2 (porta 8002)
+  # Peer 2
+  peer2:
+    build: ./chat
+    container_name: peer2
+    environment:
+      - PORTA_RECEBIMENTO=5002
+      - PEER_NAME=Peer-2
+    ports:
+      - "5002:5002"
+    volumes:
+      - logs-volume:/logs
+    networks:
+      - chatmesh-net
+
   web2:
     build: ./web
+    container_name: web2
     ports:
       - "8002:8002"
     environment:
       - FRONTEND_PORT=8002
-      - PEER_DESTINO=peer_2:5000
+      - PEER_DESTINO=peer2:5002
       - PEER_NAME=Peer-2
     volumes:
       - logs-volume:/logs
@@ -44,14 +60,28 @@ services:
       - chatmesh-net
     command: uvicorn main:app --host 0.0.0.0 --port 8002
 
-  # Web 3 vinculado ao peer_3 (porta 8003)
+  # Peer 3
+  peer3:
+    build: ./chat
+    container_name: peer3
+    environment:
+      - PORTA_RECEBIMENTO=5003
+      - PEER_NAME=Peer-3
+    ports:
+      - "5003:5003"
+    volumes:
+      - logs-volume:/logs
+    networks:
+      - chatmesh-net
+
   web3:
     build: ./web
+    container_name: web3
     ports:
       - "8003:8003"
     environment:
       - FRONTEND_PORT=8003
-      - PEER_DESTINO=peer_3:5000
+      - PEER_DESTINO=peer3:5003
       - PEER_NAME=Peer-3
     volumes:
       - logs-volume:/logs
