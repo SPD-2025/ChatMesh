@@ -31,6 +31,20 @@ services:
     volumes:
       - logs-volume:/logs
 
+  web:
+    build: ./web
+    container_name: web
+    environment:
+      - PEER_DESTINO_IP=peer1
+      - PEER_DESTINO_PORTA=5000
+    ports:
+      - "8000:8000"
+    networks:
+      - chatmesh-net
+    volumes:
+      - logs-volume:/logs
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
 networks:
   chatmesh-net:
     driver: bridge

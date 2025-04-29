@@ -121,7 +121,9 @@ if __name__ == "__main__":
     
     # Criar socket para o servidor
     servidor = Process(target=servidor_receber)
-    cliente = Process(target=cliente_enviar)
+    #cliente = Process(target=cliente_enviar)
+    
+    
     # Iniciar servidor em thread separada
     #thread_servidor = threading.Thread(target=servidor_receber, daemon=True)
     #thread_servidor.start()
@@ -129,7 +131,7 @@ if __name__ == "__main__":
     # Iniciar envio automático
     #cliente_enviar()
     servidor.start()
-    cliente.start()
+    #cliente.start()
 
     servidor.join()
     cliente.join()

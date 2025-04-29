@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>ChatMesh Interface</title>
+    <meta http-equiv="refresh" content="5"> <!-- Auto-refresh a cada 5 segundos -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0A192F;
+            color: #E5E5E5;
+            margin: 20px;
+        }
+        h1 {
+            color: #00FFFF;
+        }
+        .mensagem {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #112240;
+            border-radius: 5px;
+        }
+        .mensagem strong {
+            color: #64FFDA;
+        }
+        form {
+            margin-top: 20px;
+        }
+        input[type="text"] {
+            padding: 10px;
+            width: 70%;
+            border-radius: 5px;
+            border: none;
+        }
+        input[type="submit"] {
+            padding: 10px 20px;
+            background-color: #00FFFF;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .filters {
+            margin-bottom: 20px;
+        }
+        .filters a {
+            padding: 8px 16px;
+            background-color: #112240;
+            color: #64FFDA;
+            border-radius: 5px;
+            margin-right: 10px;
+            text-decoration: none;
+        }
+        .filters a.active {
+            background-color: #64FFDA;
+            color: #0A192F;
+        }
+    </style>
+</head>
+<body>
+
+<h1>ChatMesh 📡</h1>
+
+<div class="filters">
+    <a href="/" class="{{ 'active' if not peer_filter else '' }}">Todos</a>
+    <a href="/?peer=Peer1" class="{{ 'active' if peer_filter == 'Peer1' else '' }}">Peer1</a>
+    <a href="/?peer=Peer2" class="{{ 'active' if peer_filter == 'Peer2' else '' }}">Peer2</a>
+</div>
+
+<div>
+    {% for peer, mensagem in mensagens %}
+        <div class="mensagem">
+            <strong>{{ peer }}:</strong> {{ mensagem }}
+        </div>
+    {% endfor %}
+</div>
+
+<form action="/send" method="post">
+    <input type="text" name="mensagem" placeholder="Digite uma mensagem para Peer1..." required autofocus="autofocus">
+    <input type="submit" value="Enviar">
+</form>
+
+</body>
+</html>
