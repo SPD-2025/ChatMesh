@@ -4,6 +4,7 @@ import os
 import time
 import uuid
 import logging
+from multiprocessing import Process
 
 # ========================
 # Configurações via Ambiente
@@ -51,14 +52,14 @@ def servidor_receber():
     server_socket.bind(('', PORTA_RECEBIMENTO))
     server_socket.listen()
 
-    registrar_log(f"[SERVIDOR] {NOME_PEER} aguardando conexões na porta {PORTA_RECEBIMENTO}...")
+    logging.info(f"[SERVIDOR] {NOME_PEER} aguardando conexões na porta {PORTA_RECEBIMENTO}...")
 
     while True:
         conn, addr = server_socket.accept()
         data = conn.recv(1024)
         if data:
             mensagem = data.decode()
-            registrar_log(f"[{NOME_PEER}] MENSAGEM RECEBIDA de {addr}: {mensagem}")
+            logging.info(f"[{NOME_PEER}] MENSAGEM RECEBIDA de {addr}: {mensagem}")
             
             # Se não for um ACK, responder com ACK
             if not mensagem.startswith("ACK:"):
@@ -75,10 +76,10 @@ def enviar_mensagem(ip, porta, mensagem):
         # Esperar resposta ACK
         ack = client_socket.recv(1024).decode()
         if ack.startswith("ACK:"):
-            registrar_log(f"[{NOME_PEER}] ACK recebido de {ip}:{porta} para mensagem: {mensagem}")
+            logging.info(f"[{NOME_PEER}] ACK recebido de {ip}:{porta} para mensagem: {mensagem}")
         client_socket.close()
     except Exception as e:
-        registrar_log(f"[{NOME_PEER}] ERRO ao enviar para {ip}:{porta} - {e}")
+        logging.error(f"[{NOME_PEER}] ERRO ao enviar para {ip}:{porta} - {e}")
         with lock_buffer:
             buffer_mensagens.append((ip, porta, mensagem))  # Coloca no buffer para tentar de novo
 
@@ -95,7 +96,7 @@ def cliente_enviar():
         # Tentar reenviar mensagens do buffer
         with lock_buffer:
             if buffer_mensagens:
-                registrar_log(f"[{NOME_PEER}] Tentando reenviar {len(buffer_mensagens)} mensagens do buffer...")
+                logging.info(f"[{NOME_PEER}] Tentando reenviar {len(buffer_mensagens)} mensagens do buffer...")
                 for ip, porta, mensagem_pendente in buffer_mensagens[:]:  # copia segura da lista
                     try:
                         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -103,7 +104,7 @@ def cliente_enviar():
                         client_socket.sendall(mensagem_pendente.encode())
                         ack = client_socket.recv(1024).decode()
                         if ack.startswith("ACK:"):
-                            registrar_log(f"[{NOME_PEER}] ACK recebido (reenvio) de {ip}:{porta} para mensagem: {mensagem_pendente}")
+                            logging.info(f"[{NOME_PEER}] ACK recebido (reenvio) de {ip}:{porta} para mensagem: {mensagem_pendente}")
                             buffer_mensagens.remove((ip, porta, mensagem_pendente))
                         client_socket.close()
                     except:
@@ -117,10 +118,18 @@ def cliente_enviar():
 
 if __name__ == "__main__":
     os.makedirs("/logs", exist_ok=True)
-
+    
+    # Criar socket para o servidor
+    servidor = Process(target=servidor_receber)
+    cliente = Process(target=cliente_enviar)
     # Iniciar servidor em thread separada
-    thread_servidor = threading.Thread(target=servidor_receber, daemon=True)
-    thread_servidor.start()
+    #thread_servidor = threading.Thread(target=servidor_receber, daemon=True)
+    #thread_servidor.start()
 
     # Iniciar envio automático
-    cliente_enviar()
+    #cliente_enviar()
+    servidor.start()
+    cliente.start()
+
+    servidor.join()
+    cliente.join()
