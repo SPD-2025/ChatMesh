@@ -6,10 +6,9 @@ from multiprocessing import Process
 
 # Nome único baseado no hostname do container
 hostname = socket.gethostname()
-NOME_PEER = f"Peer-{hostname[:8]}"
+NOME_PEER = os.getenv("PEER_NAME", socket.gethostname())
+PORTA_RECEBIMENTO = int(os.getenv("PORTA_RECEBIMENTO", 5000))
 
-# Configurações
-PORTA_RECEBIMENTO = int(os.getenv('PORTA_RECEBIMENTO', 5000))
 LOG_DIR = "/logs"
 DB_PATH = os.path.join(LOG_DIR, f"{NOME_PEER}.db")
 

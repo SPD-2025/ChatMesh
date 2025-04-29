@@ -1,23 +1,26 @@
+# docker-compose.yml
 version: "3.8"
 
 services:
   peer:
     build: ./chat
+    ports:
+      - "5000"
     environment:
       - PORTA_RECEBIMENTO=5000
     volumes:
       - logs-volume:/logs
     networks:
       - chatmesh-net
-    deploy:
-      mode: replicated
-      replicas: 1 # NÃO escalar aqui, vamos usar --scale manual
 
   web:
     build: ./web
-    container_name: web
     ports:
       - "8000:8000"
+    environment:
+      - FRONTEND_PORT=8000
+      - PEER_DESTINO=peer:5000
+      - PEER_NAME=Peer-Web
     volumes:
       - logs-volume:/logs
     networks:
