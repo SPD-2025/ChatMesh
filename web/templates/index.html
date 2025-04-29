@@ -22,18 +22,21 @@
 
 <h1>ChatMesh Interface 📡</h1>
 
-<!-- Área de chat -->
 <div id="chat" class="chat">
-    <!-- Mensagens serão inseridas aqui -->
+{% for mensagem in mensagens %}
+    {% if mensagem['peer'] == meu_peer %}
+        <div class="mensagem enviada"><strong>{{ mensagem['peer'] }}</strong>: {{ mensagem['conteudo'] }}</div>
+    {% else %}
+        <div class="mensagem recebida"><strong>{{ mensagem['peer'] }}</strong>: {{ mensagem['conteudo'] }}</div>
+    {% endif %}
+{% endfor %}
 </div>
 
-<!-- Formulário de envio -->
 <form id="formulario">
     <input type="text" id="mensagem" name="mensagem" placeholder="Digite sua mensagem..." required style="width:70%;padding:10px;">
     <input type="submit" value="Enviar" style="padding:10px;">
 </form>
 
-<!-- Script para WebSocket + Atualização -->
 <script>
     async function atualizarMensagens() {
         const response = await fetch("/api/mensagens");
@@ -49,7 +52,7 @@
         });
     }
 
-    const socket = new WebSocket("ws://localhost:8000/ws");
+    const socket = new WebSocket("ws://localhost:{{ FRONTEND_PORT }}/ws");
     socket.onmessage = function(event) {
         if (event.data === "update") {
             atualizarMensagens();
@@ -71,10 +74,9 @@
         });
 
         document.getElementById('mensagem').value = "";
-        await atualizarMensagens(); // Atualizar imediatamente após envio
+        await atualizarMensagens();
     });
 
-    // Atualizar mensagens na primeira carga
     atualizarMensagens();
 </script>
 

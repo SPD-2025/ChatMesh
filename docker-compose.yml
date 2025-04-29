@@ -2,6 +2,7 @@
 version: "3.8"
 
 services:
+  # Peer escalável com nomes automáticos
   peer:
     build: ./chat
     ports:
@@ -13,19 +14,50 @@ services:
     networks:
       - chatmesh-net
 
-  web:
+  # Web 1 vinculado ao peer_1 (porta 8001)
+  web1:
     build: ./web
     ports:
-      - "8000:8000"
+      - "8001:8001"
     environment:
-      - FRONTEND_PORT=8000
-      - PEER_DESTINO=peer:5000
-      - PEER_NAME=Peer-Web
+      - FRONTEND_PORT=8001
+      - PEER_DESTINO=peer_1:5000
+      - PEER_NAME=Peer-1
     volumes:
       - logs-volume:/logs
     networks:
       - chatmesh-net
-    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    command: uvicorn main:app --host 0.0.0.0 --port 8001
+
+  # Web 2 vinculado ao peer_2 (porta 8002)
+  web2:
+    build: ./web
+    ports:
+      - "8002:8002"
+    environment:
+      - FRONTEND_PORT=8002
+      - PEER_DESTINO=peer_2:5000
+      - PEER_NAME=Peer-2
+    volumes:
+      - logs-volume:/logs
+    networks:
+      - chatmesh-net
+    command: uvicorn main:app --host 0.0.0.0 --port 8002
+
+  # Web 3 vinculado ao peer_3 (porta 8003)
+  web3:
+    build: ./web
+    ports:
+      - "8003:8003"
+    environment:
+      - FRONTEND_PORT=8003
+      - PEER_DESTINO=peer_3:5000
+      - PEER_NAME=Peer-3
+    volumes:
+      - logs-volume:/logs
+    networks:
+      - chatmesh-net
+    command: uvicorn main:app --host 0.0.0.0 --port 8003
 
 volumes:
   logs-volume:
