@@ -34,11 +34,13 @@
 
 <script>
     async function atualizarMensagens() {
-        const response = await fetch(window.location.href);
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(await response.text(), 'text/html');
-        const novasMensagens = doc.querySelector('#mensagens');
-        document.querySelector('#mensagens').innerHTML = novasMensagens.innerHTML;
+        const response = await fetch("/api/mensagens");
+        const data = await response.json();
+        const mensagensDiv = document.getElementById('mensagens');
+        mensagensDiv.innerHTML = '';
+        data.forEach(({ peer, mensagem }) => {
+            mensagensDiv.innerHTML += `<div class="mensagem"><strong>${peer}:</strong> ${mensagem}</div>`;
+        });
     }
 
     const socket = new WebSocket("ws://localhost:8000/ws");

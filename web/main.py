@@ -1,21 +1,29 @@
 from fastapi import FastAPI, Request, Form, WebSocket
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 import os
 import socket
 import aiofiles
 import asyncio
+import time
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
 LOGS_PATH = "/logs"
-PEER_PORT = 5000  # Porta padrão de escuta
+PEER_PORT = 5000
+
+peers_cache = []
+peers_last_update = 0
 
 # Descobrir peers ativos
 def descobrir_peers():
+    global peers_cache, peers_last_update
+    agora = time.time()
+    if agora - peers_last_update < 30:  # só atualizar a cada 30 segundos
+        return peers_cache
     vivos = []
-    for i in range(2, 20):  # range de IPs docker padrão
+    for i in range(2, 20):
         ip = f"172.18.0.{i}"
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -25,6 +33,8 @@ def descobrir_peers():
             s.close()
         except:
             continue
+    peers_cache = vivos
+    peers_last_update = agora
     return vivos
 
 async def carregar_mensagens():
@@ -49,6 +59,11 @@ async def index(request: Request):
         "mensagens": mensagens,
         "peers_ativos": peers_ativos
     })
+
+@app.get("/api/mensagens")
+async def api_mensagens():
+    mensagens = await carregar_mensagens()
+    return JSONResponse(content=[{"peer": peer, "mensagem": msg} for peer, msg in mensagens])
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
