@@ -36,6 +36,7 @@ def inicializar_banco():
     conn.commit()
     conn.close()
 
+
 def descobrir_peers():
     global peers_cache, peers_last_update
     agora = time.time()
@@ -57,14 +58,36 @@ def descobrir_peers():
     return vivos
 
 async def carregar_mensagens():
-    inicializar_banco()
     mensagens = []
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
-    cur.execute('SELECT remetente, conteudo FROM mensagens ORDER BY id')
-    mensagens = cur.fetchall()
-    conn.close()
-    return mensagens
+    if not os.path.exists(LOGS_PATH):
+        os.makedirs(LOGS_PATH, exist_ok=True)
+
+    for arquivo in os.listdir(LOGS_PATH):
+        if arquivo.endswith(".db"):
+            caminho = os.path.join(LOGS_PATH, arquivo)
+            conn = sqlite3.connect(caminho)
+            cur = conn.cursor()
+            try:
+                cur.execute('SELECT remetente, conteudo FROM mensagens ORDER BY id')
+                registros = cur.fetchall()
+                for remetente, conteudo in registros:
+                    mensagens.append({"peer": remetente, "conteudo": conteudo})
+            except sqlite3.Error as e:
+                print(f"Erro lendo {arquivo}: {e}")
+            conn.close()
+
+    # Remover duplicatas (mesma mensagem em múltiplos bancos)
+    mensagens_unicas = []
+    vistos = set()
+    for msg in mensagens:
+        chave = (msg["peer"], msg["conteudo"])
+        if chave not in vistos:
+            mensagens_unicas.append(msg)
+            vistos.add(chave)
+
+    return mensagens_unicas
+
+
 
 @app.get("/")
 async def index(request: Request):
@@ -80,7 +103,7 @@ async def index(request: Request):
 @app.get("/api/mensagens")
 async def api_mensagens():
     mensagens = await carregar_mensagens()
-    return JSONResponse(content=[{"peer": peer, "conteudo": conteudo} for peer, conteudo in mensagens])
+    return JSONResponse(content=mensagens)
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):

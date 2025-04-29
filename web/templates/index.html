@@ -23,14 +23,16 @@
 <h1>ChatMesh Interface 📡</h1>
 
 <div id="chat" class="chat">
-{% for peer, conteudo in mensagens %}
-    {% if peer == meu_peer %}
-        <div class="mensagem enviada"><strong>{{ peer }}</strong>: {{ conteudo }}</div>
-    {% else %}
-        <div class="mensagem recebida"><strong>{{ peer }}</strong>: {{ conteudo }}</div>
-    {% endif %}
-{% endfor %}
-</div>
+    {% for mensagem in mensagens %}
+        {% if mensagem['peer'] == meu_peer %}
+            <div class="mensagem enviada"><strong>{{ mensagem['peer'] }}</strong>: {{ mensagem['conteudo'] }}</div>
+        {% else %}
+            <div class="mensagem recebida"><strong>{{ mensagem['peer'] }}</strong>: {{ mensagem['conteudo'] }}</div>
+        {% endif %}
+    {% endfor %}
+    </div>
+    
+    
 
 <form action="/send" method="post">
     <input type="text" name="mensagem" placeholder="Digite sua mensagem..." required style="width:70%;padding:10px;">
