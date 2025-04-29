@@ -1,37 +1,32 @@
-services:
-  chat:
-    build: ./chat
-    ports:
-      - "12345:12345"
-    volumes:
-      - conversas:/conversas
-    networks:
-      - rede_chat
-  # cliente:
-  #     build: ./cliente
-  #     depends_on:
-  #         - servidor
-  #     volumes:
-  #         - historico:/historico
-  #     networks:
-  #         - rede_lances
-  #     stdin_open: true  # importante para terminal interativo
-  #     tty: true         # importante para terminal interativo
-  # app2:
-  #     build: ./app
-  #     ports:
-  #         - "5002:5000"
-  #     volumes:
-  #         - ./mensagens:/mensagens
-  #         - ./certificados:/certificados
-  #     networks:
-  #         - rede_mensagens
-  #     environment:
-  #         - NOME_INSTANCIA=app2
+version: "3.8"
 
-volumes:
-  conversas:
+services:
+  peer1:
+    build: ./chat
+    container_name: peer1
+    environment:
+      - PORTA_RECEBIMENTO=5000
+      - PEERS_CONHECIDOS=peer2:5001
+      - NOME_PEER=Peer1
+      - INTERVALO_ENVIO=5
+    ports:
+      - "5000:5000"
+    networks:
+      - chatmesh-net
+
+  peer2:
+    build: ./chat
+    container_name: peer2
+    environment:
+      - PORTA_RECEBIMENTO=5001
+      - PEERS_CONHECIDOS=peer1:5000
+      - NOME_PEER=Peer2
+      - INTERVALO_ENVIO=5
+    ports:
+      - "5001:5001"
+    networks:
+      - chatmesh-net
 
 networks:
-  rede_chat:
+  chatmesh-net:
     driver: bridge

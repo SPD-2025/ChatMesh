@@ -1,213 +1,71 @@
 import socket
-import multiprocessing
-import datetime
-import logging
+import threading
 import os
+import time
 
-MAX_CLIENTS = 10
-MAX_MSG_LENGTH = 200
+# ========================
+# Configurações via Ambiente
+# ========================
 
-# 🔐 Usuários válidos
-USUARIOS = {
-    "joao": "1234",
-    "peralta": "1234",
-    "fabio": "1234"
-}
-# Garante que o diretório exista (dentro do container será /historico)
-os.makedirs("/historico", exist_ok=True)
+# Porta em que o servidor vai escutar
+PORTA_RECEBIMENTO = int(os.getenv('PORTA_RECEBIMENTO', 5000))
 
-# Configuração do logger para histórico
-logging.basicConfig(
-    filename="/historico/historico_leiloes.txt",
-    level=logging.INFO,
-    format="%(asctime)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    encoding="utf-8"
-)
-historico_logger = logging.getLogger("leilao")
+# Nome do peer (opcional, para personalizar a mensagem enviada)
+NOME_PEER = os.getenv('NOME_PEER', 'Peer')
 
+# Lista de peers conhecidos no formato: "ip1:porta1,ip2:porta2"
+peers_raw = os.getenv('PEERS_CONHECIDOS', '')
+PEERS_CONHECIDOS = []
+if peers_raw:
+    for peer in peers_raw.split(','):
+        ip, porta = peer.split(':')
+        PEERS_CONHECIDOS.append((ip, int(porta)))
 
-def log(message):
-    timestamp = datetime.datetime.now().strftime("[%H:%M:%S]")
-    print(f"{timestamp} {message}")
+# Intervalo de envio automático (segundos)
+INTERVALO_ENVIO = int(os.getenv('INTERVALO_ENVIO', 5))
 
+# ========================
+# Funções de Comunicação
+# ========================
 
-def broadcast(all_clients, message, exclude=None):
-    for c in all_clients:
-        if c != exclude:
-            try:
-                c.send(message.encode())
-            except:
-                continue
+def servidor_receber():
+    """Thread para receber mensagens."""
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind(('', PORTA_RECEBIMENTO))  # Escuta em todas as interfaces
+    server_socket.listen()
 
-
-def autenticar_usuario(client_socket):
-    client_socket.send("Usuário: ".encode())
-    usuario = client_socket.recv(1024).decode().strip()
-
-    client_socket.send("Senha: ".encode())
-    senha = client_socket.recv(1024).decode().strip()
-
-    if usuario not in USUARIOS or USUARIOS[usuario] != senha:
-        client_socket.send("❌ Credenciais inválidas. Conexão encerrada.".encode())
-        client_socket.close()
-        return None
-
-    client_socket.send("✅ Autenticado com sucesso.\n".encode())
-    return usuario
-
-
-def process_request(client_socket, addr, all_clients, nicknames, lock, leilao):
-    try:
-        nickname = autenticar_usuario(client_socket)
-        if nickname is None:
-            return
-
-        with lock:
-            nicknames[client_socket.fileno()] = nickname
-
-        log(f"{nickname} ({addr}) conectado.")
-        client_socket.send(f"{nickname} conectado ao servidor de leilão.\nComandos: item <nome>, lance <valor>, encerrar, sair".encode())
-
-        while True:
-            message = client_socket.recv(1024).decode().strip()
-            if not message:
-                break
-
-            if len(message) > MAX_MSG_LENGTH:
-                client_socket.send(f"⚠️ Sua mensagem ultrapassou {MAX_MSG_LENGTH} caracteres.".encode())
-                continue
-
-            if message.lower() == "sair":
-                log(f"{nickname} desconectou.")
-                break
-
-            if message.startswith("item "):
-                item = message[5:].strip()
-                with lock:
-                    leilao['item'] = item
-                    leilao['lance'] = {'valor': 0, 'autor': None}
-                    del leilao['lances'][:]
-                    leilao['ativo'] = True
-                log(f"Novo item cadastrado para leilão: {item}")
-                broadcast(all_clients, f"🔨 Leilão iniciado para o item: {item}!", client_socket)
-                continue
-
-            if message.startswith("lance "):
-                try:
-                    valor = int(message[6:].strip())
-                except ValueError:
-                    client_socket.send("⚠️ Valor de lance inválido.".encode())
-                    continue
-
-                with lock:
-                    if not leilao.get('ativo', False):
-                        client_socket.send("⚠️ Nenhum leilão ativo.".encode())
-                        continue
-
-                    if valor <= leilao['lance']['valor']:
-                        client_socket.send("⚠️ O lance deve ser maior que o atual.".encode())
-                        continue
-
-                    leilao['lance'] = {'valor': valor, 'autor': nickname}
-                    leilao['lances'].append((valor, nickname))
-                    log(f"Lance de R$ {valor} por {nickname}")
-                    broadcast(all_clients, f"📣 Novo lance de {nickname}: R$ {valor}", client_socket)
-                continue
-
-            if message.lower() == "encerrar":
-                with lock:
-                    if not leilao.get('ativo', False):
-                        client_socket.send("⚠️ Nenhum leilão em andamento.".encode())
-                        continue
-
-                    item = leilao['item']
-                    vencedor = leilao['lance']['autor']
-                    valor = leilao['lance']['valor']
-                    lances = list(leilao['lances'])
-                    leilao['ativo'] = False
-                    del leilao['lances'][:]
-
-                resultado = f"🏁 Leilão encerrado para '{item}'! Vencedor: {vencedor} com R$ {valor}" if vencedor else "❌ Leilão encerrado sem lances."
-                log(resultado)
-                broadcast(all_clients, resultado, None)
-
-                historico_logger.info(f"Leilão encerrado: {item}")
-                if vencedor:
-                    historico_logger.info(f"Vencedor: {vencedor} | Valor final: R$ {valor}")
-                else:
-                    historico_logger.info("Nenhum lance registrado.")
-
-                if lances:
-                    historico_logger.info("Lances:")
-                    for v, autor in lances:
-                        historico_logger.info(f"  {autor} -> R$ {v}")
-                else:
-                    historico_logger.info("Nenhum lance foi feito.")
-
-                historico_logger.info("-" * 40)
-                continue
-
-            log(f"{nickname}: {message}")
-            broadcast(all_clients, f"{nickname}: {message}", client_socket)
-
-    except Exception as e:
-        log(f"Erro com {addr}: {e}")
-
-    finally:
-        with lock:
-            if client_socket in all_clients:
-                all_clients.remove(client_socket)
-            nicknames.pop(client_socket.fileno(), None)
-        client_socket.close()
-
-
-def start_server(host='0.0.0.0', port=12345):
-    try:
-        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server.bind((host, port))
-    except OSError as e:
-        if e.errno == 10048:
-            log(f"❌ A porta {port} já está em uso. Tente usar outra porta ou finalize o processo que está ocupando ela.")
-        else:
-            log(f"Erro ao iniciar o servidor: {e}")
-        return
-
-    server.listen(5)
-    log(f"Servidor ouvindo em {host}:{port}")
-
-    manager = multiprocessing.Manager()
-    all_clients = manager.list()
-    nicknames = manager.dict()
-    lock = manager.Lock()
-
-    leilao = manager.dict()
-    leilao['item'] = None
-    leilao['lance'] = {'valor': 0, 'autor': None}
-    leilao['lances'] = manager.list()
-    leilao['ativo'] = False
+    print(f"[SERVIDOR] {NOME_PEER} aguardando conexões na porta {PORTA_RECEBIMENTO}...")
 
     while True:
-        client_socket, addr = server.accept()
+        conn, addr = server_socket.accept()
+        data = conn.recv(1024)
+        if data:
+            print(f"[{NOME_PEER}] MENSAGEM RECEBIDA de {addr}: {data.decode()}")
+        conn.close()
 
-        with lock:
-            if len(all_clients) >= MAX_CLIENTS:
-                log(f"Servidor cheio! Recusando {addr}")
-                try:
-                    client_socket.send("Servidor cheio. Tente novamente mais tarde.".encode())
-                except:
-                    pass
+def cliente_enviar():
+    """Thread para enviar mensagens automáticas."""
+    while True:
+        mensagem = f"Hello from {NOME_PEER}!"
+        for ip, porta in PEERS_CONHECIDOS:
+            try:
+                client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                client_socket.connect((ip, porta))
+                client_socket.sendall(mensagem.encode())
                 client_socket.close()
-                continue
-            all_clients.append(client_socket)
+                print(f"[{NOME_PEER}] Mensagem enviada para {ip}:{porta}")
+            except Exception as e:
+                print(f"[{NOME_PEER}] ERRO ao enviar para {ip}:{porta} - {e}")
+        time.sleep(INTERVALO_ENVIO)
 
-        client_process = multiprocessing.Process(
-            target=process_request,
-            args=(client_socket, addr, all_clients, nicknames, lock, leilao)
-        )
-        client_process.start()
-
+# ========================
+# Execução Principal
+# ========================
 
 if __name__ == "__main__":
-    start_server()
-    
+    # Iniciar servidor em thread separada
+    thread_servidor = threading.Thread(target=servidor_receber, daemon=True)
+    thread_servidor.start()
+
+    # Iniciar envio automático
+    cliente_enviar()
