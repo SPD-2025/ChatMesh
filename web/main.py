@@ -34,18 +34,37 @@ def inicializar_banco():
     ''')
     conn.commit()
     conn.close()
-
 async def carregar_mensagens():
-    inicializar_banco()
     mensagens = []
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
-    cur.execute('SELECT remetente, conteudo FROM mensagens ORDER BY id')
-    registros = cur.fetchall()
-    conn.close()
-    for remetente, conteudo in registros:
-        mensagens.append({"peer": remetente, "conteudo": conteudo})
-    return mensagens
+    if not os.path.exists(LOGS_PATH):
+        os.makedirs(LOGS_PATH, exist_ok=True)
+
+    for arquivo in os.listdir(LOGS_PATH):
+        if arquivo.endswith(".db"):
+            caminho = os.path.join(LOGS_PATH, arquivo)
+            conn = sqlite3.connect(caminho)
+            cur = conn.cursor()
+            try:
+                cur.execute('SELECT remetente, conteudo FROM mensagens ORDER BY id')
+                registros = cur.fetchall()
+                for remetente, conteudo in registros:
+                    mensagens.append({"peer": remetente, "conteudo": conteudo})
+            except sqlite3.Error as e:
+                print(f"Erro lendo {arquivo}: {e}")
+            conn.close()
+
+    # Remover duplicatas
+    mensagens_unicas = []
+    vistos = set()
+    for msg in mensagens:
+        chave = (msg["peer"], msg["conteudo"])
+        if chave not in vistos:
+            mensagens_unicas.append(msg)
+            vistos.add(chave)
+
+    return mensagens_unicas
+
+
 
 @app.get("/")
 async def index(request: Request):
@@ -67,7 +86,6 @@ async def websocket_endpoint(websocket: WebSocket):
     while True:
         await websocket.send_text("update")
         await asyncio.sleep(5)
-
 @app.post("/send")
 async def send_message(mensagem: str = Form(...)):
     ip_port = PEER_DESTINO.split(":")
@@ -81,7 +99,7 @@ async def send_message(mensagem: str = Form(...)):
         client_socket.connect((ip, port))
         client_socket.sendall(mensagem_formatada.encode())
         client_socket.close()
+        return JSONResponse(content={"status": "ok"})
     except Exception as e:
         print(f"Erro enviando mensagem: {e}")
-
-    return RedirectResponse(url="/", status_code=303)
+        return JSONResponse(content={"status": "erro", "detalhes": str(e)}, status_code=500)

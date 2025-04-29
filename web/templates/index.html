@@ -22,16 +22,10 @@
 
 <h1>ChatMesh Interface 📡</h1>
 
-<div id="chat" class="chat">
-{% for mensagem in mensagens %}
-    {% if mensagem['peer'] == meu_peer %}
-        <div class="mensagem enviada"><strong>{{ mensagem['peer'] }}</strong>: {{ mensagem['conteudo'] }}</div>
-    {% else %}
-        <div class="mensagem recebida"><strong>{{ mensagem['peer'] }}</strong>: {{ mensagem['conteudo'] }}</div>
-    {% endif %}
-{% endfor %}
-</div>
+<!-- Área de mensagens -->
+<div id="chat" class="chat"></div>
 
+<!-- Formulário de envio -->
 <form id="formulario">
     <input type="text" id="mensagem" name="mensagem" placeholder="Digite sua mensagem..." required style="width:70%;padding:10px;">
     <input type="submit" value="Enviar" style="padding:10px;">
@@ -59,9 +53,11 @@
         }
     };
 
+    // NOVO: interceptar envio do formulário
     const formulario = document.getElementById('formulario');
     formulario.addEventListener('submit', async (e) => {
-        e.preventDefault();
+        e.preventDefault(); // Impede recarregar página
+
         const mensagem = document.getElementById('mensagem').value;
         if (mensagem.trim() === "") return;
 
@@ -74,9 +70,10 @@
         });
 
         document.getElementById('mensagem').value = "";
-        await atualizarMensagens();
+        await atualizarMensagens(); // Atualiza chat na hora!
     });
 
+    // Atualiza chat na primeira carga
     atualizarMensagens();
 </script>
 
