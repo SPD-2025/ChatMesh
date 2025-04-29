@@ -2,118 +2,49 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>ChatMesh Interface</title>
+    <title>ChatMesh 📡</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #0A192F;
-            color: #E5E5E5;
-            margin: 20px;
-        }
-        h1 {
-            color: #00FFFF;
-        }
-        .painel {
-            margin-bottom: 20px;
-            padding: 15px;
-            background-color: #112240;
-            border-radius: 8px;
-            box-shadow: 0 0 10px #00ffff44;
-        }
-        .painel div {
-            margin-bottom: 8px;
-        }
-        .mensagem {
-            margin: 10px 0;
-            padding: 10px;
-            background-color: #112240;
-            border-radius: 5px;
-            box-shadow: 0 0 5px #00ffff22;
-            animation: fadeIn 0.5s ease-in-out;
-        }
-        .mensagem strong {
-            color: #64FFDA;
-        }
-        form {
-            margin-top: 20px;
-        }
-        input[type="text"] {
-            padding: 10px;
-            width: 70%;
-            border-radius: 5px;
-            border: none;
-        }
-        input[type="submit"] {
-            padding: 10px 20px;
-            background-color: #00FFFF;
-            color: #000;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-left: 10px;
-        }
-        .filters {
-            margin-bottom: 20px;
-        }
-        .filters a {
-            padding: 8px 16px;
-            background-color: #112240;
-            color: #64FFDA;
-            border-radius: 5px;
-            margin-right: 10px;
-            text-decoration: none;
-        }
-        .filters a.active {
-            background-color: #64FFDA;
-            color: #0A192F;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
+        body { font-family: Arial; background: #0A192F; color: #E5E5E5; padding: 20px; }
+        .mensagem { margin: 10px; padding: 10px; background: #112240; border-radius: 5px; }
     </style>
 </head>
 <body>
 
-<h1>ChatMesh 📡</h1>
+<h1>ChatMesh Interface 📡</h1>
 
-<div class="painel">
-    <h2>Status dos Peers</h2>
-    {% for peer, online in status_peers.items() %}
-        <div>{{ peer }}: {% if online %}🟢 Online{% else %}🔴 Offline{% endif %}</div>
-    {% endfor %}
-</div>
+<h2>Peers ativos:</h2>
+<ul>
+{% for peer in peers_ativos %}
+    <li>{{ peer }}</li>
+{% endfor %}
+</ul>
 
-<div class="painel">
-    <h2>Métricas</h2>
-    <div>Mensagens Enviadas: {{ enviados }}</div>
-    <div>Mensagens Recebidas: {{ recebidos }}</div>
-</div>
-
-<div class="filters">
-    <a href="/" class="{{ 'active' if not peer_filter else '' }}">Todos</a>
-    <a href="/?peer=Peer1" class="{{ 'active' if peer_filter == 'Peer1' else '' }}">Peer1</a>
-    <a href="/?peer=Peer2" class="{{ 'active' if peer_filter == 'Peer2' else '' }}">Peer2</a>
-</div>
-
-<div>
-    {% for peer, mensagem in mensagens %}
-        <div class="mensagem">
-            <strong>{{ peer }}:</strong> {{ mensagem }}
-        </div>
-    {% endfor %}
+<h2>Mensagens:</h2>
+<div id="mensagens">
+{% for peer, mensagem in mensagens %}
+    <div class="mensagem"><strong>{{ peer }}:</strong> {{ mensagem }}</div>
+{% endfor %}
 </div>
 
 <form action="/send" method="post">
-    <input type="text" name="mensagem" placeholder="Digite uma mensagem para Peer1..." required>
-    <input type="submit" value="Enviar">
+    <input type="text" name="mensagem" placeholder="Digite sua mensagem..." required style="width:70%;padding:10px;">
+    <input type="submit" value="Enviar" style="padding:10px;">
 </form>
 
 <script>
+    async function atualizarMensagens() {
+        const response = await fetch(window.location.href);
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(await response.text(), 'text/html');
+        const novasMensagens = doc.querySelector('#mensagens');
+        document.querySelector('#mensagens').innerHTML = novasMensagens.innerHTML;
+    }
+
     const socket = new WebSocket("ws://localhost:8000/ws");
     socket.onmessage = function(event) {
-        if (event.data === "refresh") {
-            location.reload();
+        if (event.data === "update") {
+            atualizarMensagens();
         }
     };
 </script>

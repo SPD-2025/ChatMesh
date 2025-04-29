@@ -1,31 +1,10 @@
 version: "3.8"
 
 services:
-  peer1:
+  peer:
     build: ./chat
-    container_name: peer1
     environment:
       - PORTA_RECEBIMENTO=5000
-      - PEERS_CONHECIDOS=peer2:5001
-      - NOME_PEER=Peer1
-      - INTERVALO_ENVIO=5
-    ports:
-      - "5000:5000"
-    networks:
-      - chatmesh-net
-    volumes:
-      - logs-volume:/logs
-
-  peer2:
-    build: ./chat
-    container_name: peer2
-    environment:
-      - PORTA_RECEBIMENTO=5001
-      - PEERS_CONHECIDOS=peer1:5000
-      - NOME_PEER=Peer2
-      - INTERVALO_ENVIO=5
-    ports:
-      - "5001:5001"
     networks:
       - chatmesh-net
     volumes:
@@ -33,17 +12,13 @@ services:
 
   web:
     build: ./web
-    container_name: web
-    environment:
-      - PEER_DESTINO_IP=peer1
-      - PEER_DESTINO_PORTA=5000
     ports:
       - "8000:8000"
     networks:
       - chatmesh-net
     volumes:
       - logs-volume:/logs
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
 
 networks:
   chatmesh-net:
