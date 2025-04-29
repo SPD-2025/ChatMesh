@@ -6,24 +6,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body { font-family: Arial; background: #0A192F; color: #E5E5E5; padding: 20px; }
-        .mensagem { margin: 10px; padding: 10px; background: #112240; border-radius: 5px; }
+        .chat { display: flex; flex-direction: column; }
+        .mensagem {
+            max-width: 60%;
+            margin: 5px;
+            padding: 10px;
+            border-radius: 10px;
+            background: #112240;
+        }
+        .enviada { background: #00FF99; color: #000; align-self: flex-end; }
+        .recebida { background: #445566; align-self: flex-start; }
     </style>
 </head>
 <body>
 
 <h1>ChatMesh Interface 📡</h1>
 
-<h2>Peers ativos:</h2>
-<ul>
-{% for peer in peers_ativos %}
-    <li>{{ peer }}</li>
-{% endfor %}
-</ul>
-
-<h2>Mensagens:</h2>
-<div id="mensagens">
-{% for peer, mensagem in mensagens %}
-    <div class="mensagem"><strong>{{ peer }}:</strong> {{ mensagem }}</div>
+<div id="chat" class="chat">
+{% for peer, conteudo in mensagens %}
+    {% if peer == meu_peer %}
+        <div class="mensagem enviada"><strong>{{ peer }}</strong>: {{ conteudo }}</div>
+    {% else %}
+        <div class="mensagem recebida"><strong>{{ peer }}</strong>: {{ conteudo }}</div>
+    {% endif %}
 {% endfor %}
 </div>
 
@@ -36,10 +41,14 @@
     async function atualizarMensagens() {
         const response = await fetch("/api/mensagens");
         const data = await response.json();
-        const mensagensDiv = document.getElementById('mensagens');
-        mensagensDiv.innerHTML = '';
-        data.forEach(({ peer, mensagem }) => {
-            mensagensDiv.innerHTML += `<div class="mensagem"><strong>${peer}:</strong> ${mensagem}</div>`;
+        const chat = document.getElementById('chat');
+        chat.innerHTML = '';
+        data.forEach(({ peer, conteudo }) => {
+            if (peer === "{{ meu_peer }}") {
+                chat.innerHTML += `<div class="mensagem enviada"><strong>${peer}</strong>: ${conteudo}</div>`;
+            } else {
+                chat.innerHTML += `<div class="mensagem recebida"><strong>${peer}</strong>: ${conteudo}</div>`;
+            }
         });
     }
 

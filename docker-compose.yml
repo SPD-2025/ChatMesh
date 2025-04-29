@@ -5,24 +5,28 @@ services:
     build: ./chat
     environment:
       - PORTA_RECEBIMENTO=5000
-    networks:
-      - chatmesh-net
     volumes:
       - logs-volume:/logs
+    networks:
+      - chatmesh-net
+    deploy:
+      mode: replicated
+      replicas: 1 # NÃO escalar aqui, vamos usar --scale manual
 
   web:
     build: ./web
+    container_name: web
     ports:
       - "8000:8000"
-    networks:
-      - chatmesh-net
     volumes:
       - logs-volume:/logs
+    networks:
+      - chatmesh-net
     command: uvicorn main:app --host 0.0.0.0 --port 8000
+
+volumes:
+  logs-volume:
 
 networks:
   chatmesh-net:
     driver: bridge
-
-volumes:
-  logs-volume:
