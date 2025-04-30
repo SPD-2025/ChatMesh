@@ -37,13 +37,14 @@
         const data = await response.json();
         const chat = document.getElementById('chat');
         chat.innerHTML = '';
-        data.forEach(({ peer, conteudo }) => {
+        data.forEach(({ peer, conteudo, timestamp }) => {
             if (peer === "{{ meu_peer }}") {
-                chat.innerHTML += `<div class="mensagem enviada"><strong>${peer}</strong>: ${conteudo}</div>`;
+                chat.innerHTML += `<div class="mensagem enviada"><strong>${peer}</strong>: ${conteudo} <small style="font-size:10px;color:#ccc;">${timestamp}</small></div>`;
             } else {
-                chat.innerHTML += `<div class="mensagem recebida"><strong>${peer}</strong>: ${conteudo}</div>`;
+                chat.innerHTML += `<div class="mensagem recebida"><strong>${peer}</strong>: ${conteudo} <small style="font-size:10px;color:#ccc;">${timestamp}</small></div>`;
             }
         });
+
     }
 
     const socket = new WebSocket("ws://localhost:{{ FRONTEND_PORT }}/ws");

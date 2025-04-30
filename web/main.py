@@ -45,14 +45,16 @@ async def carregar_mensagens():
             conn = sqlite3.connect(caminho)
             cur = conn.cursor()
             try:
-                cur.execute('SELECT remetente, conteudo FROM mensagens ORDER BY id')
+                cur.execute('SELECT timestamp, remetente, conteudo FROM mensagens')
                 registros = cur.fetchall()
-                for remetente, conteudo in registros:
-                    mensagens.append({"peer": remetente, "conteudo": conteudo})
+                for ts, remetente, conteudo in registros:
+                    mensagens.append({"peer": remetente, "conteudo": conteudo, "timestamp": ts})
             except sqlite3.Error as e:
                 print(f"Erro lendo {arquivo}: {e}")
             conn.close()
 
+    # Ordenar por timestamp
+    mensagens.sort(key=lambda x: x["timestamp"])
     # Remover duplicatas
     mensagens_unicas = []
     vistos = set()
