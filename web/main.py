@@ -20,6 +20,8 @@ NOME_WEB = os.getenv("PEER_NAME", "Peer-Web")
 peers_cache = []
 peers_last_update = 0
 
+connections = []
+
 def inicializar_banco():
     os.makedirs(LOGS_PATH, exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
@@ -85,9 +87,15 @@ async def api_mensagens():
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    while True:
-        await websocket.send_text("update")
-        await asyncio.sleep(5)
+    connections.append(websocket)
+    # while True:
+    #     await websocket.send_text("update")
+    #     await asyncio.sleep(5)
+    try:
+        while True:
+            await asyncio.sleep(60)  # manter a conexão aberta
+    except:
+        connections.remove(websocket)
 @app.post("/send")
 async def send_message(mensagem: str = Form(...)):
     ip_port = PEER_DESTINO.split(":")
@@ -101,6 +109,12 @@ async def send_message(mensagem: str = Form(...)):
         client_socket.connect((ip, port))
         client_socket.sendall(mensagem_formatada.encode())
         client_socket.close()
+        # Notificar os webs conectados
+        for ws in connections:
+            try:
+                await ws.send_text("update")
+            except:
+                connections.remove(ws)
         return JSONResponse(content={"status": "ok"})
     except Exception as e:
         print(f"Erro enviando mensagem: {e}")
