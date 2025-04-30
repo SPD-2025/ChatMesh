@@ -17,7 +17,7 @@
     </form>
 
     <!-- Mensagens -->
-    <div id="chat" class="mb-3"></div>
+    <div id="chat" class="mb-3" style="max-height: 60vh; overflow-y: auto;"></div>
 
     <!-- Formulário para enviar mensagens -->
     <form id="formulario" class="d-flex gap-2">
@@ -35,8 +35,12 @@
       const chat = document.getElementById("chat");
       chat.innerHTML = "";
       data.forEach(({ peer, conteudo, timestamp }) => {
-        chat.innerHTML += `<div class="alert alert-secondary"><strong>${peer}</strong>: ${conteudo}<br><small>${timestamp}</small></div>`;
+        const div = document.createElement("div");
+        div.className = "alert alert-secondary";
+        div.innerHTML = `<strong>${peer}</strong>: ${conteudo}<br><small>${timestamp}</small>`;
+        chat.appendChild(div);
       });
+      chat.scrollTop = chat.scrollHeight; // scroll automático para a última mensagem
     }
 
     const socket = new WebSocket(`ws://${location.host}/ws`);
@@ -67,11 +71,13 @@
 
       const res = await fetch(`/connect?ip=${ip}&port=${port}&callback=${location.hostname}&cbport=${PORTA_TCP}`);
       const result = await res.json();
-      alert(result.status || result.erro || "Erro desconhecido");
-      atualizarMensagens();
+      if (result.status || result.ok) {
+        atualizarMensagens(); // força atualização após conectar
+      } else {
+        alert(result.status || result.erro || "Erro desconhecido");
+      }
     });
 
-    // Auto preencher campos com último peer conectado
     document.addEventListener("DOMContentLoaded", () => {
       const ip = sessionStorage.getItem("ultimoIP");
       const port = sessionStorage.getItem("ultimaPorta");
@@ -79,7 +85,6 @@
       if (port) document.getElementById("port").value = port;
     });
 
-    // Atualiza automaticamente o chat a cada 3 segundos
     setInterval(atualizarMensagens, 3000);
     atualizarMensagens();
   </script>

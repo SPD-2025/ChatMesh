@@ -1,4 +1,4 @@
-# app.py com suporte a --webport para múltiplas interfaces web
+# app.py com multiprocessing corrigido para Windows
 
 import os
 import socket
@@ -21,18 +21,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 connections = []
-def servidor(db_path, port_queue):
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind(("", 0))  # porta aleatória
-    port = s.getsockname()[1]
-    port_queue.put(port)
-    s.listen()
-    print(f"[SERVIDOR] Escutando na porta TCP {port}")
-    while True:
-        conn, _ = s.accept()
-        p = Process(target=processar_cliente, args=(conn, db_path))
-        p.daemon = True
-        p.start()
+
 def init_db(peer_name):
     os.makedirs("logs", exist_ok=True)
     db_path = f"logs/{peer_name}.db"
@@ -71,7 +60,7 @@ def carregar_mensagens(db_path):
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request, "meu_peer": app.state.peer_name, "porta_tcp": app.state.port})
-    
+
 @app.get("/api/mensagens")
 async def api_mensagens():
     return carregar_mensagens(app.state.db_path)
@@ -99,6 +88,7 @@ async def send_message(mensagem: str = Form(...)):
         except:
             pass
     return {"ok": True}
+
 @app.get("/connect")
 async def connect_peer(ip: str, port: int, callback: str = None, cbport: int = None):
     try:
@@ -106,13 +96,13 @@ async def connect_peer(ip: str, port: int, callback: str = None, cbport: int = N
         mensagens = res.json()
         for m in mensagens:
             salvar_mensagem(app.state.db_path, m["peer"], m["conteudo"])
+
         for ws in connections:
             try:
                 await ws.send_text("update")
             except:
                 pass
 
-        # reconectar de volta
         if callback and cbport:
             try:
                 requests.get(f"http://{callback}:{cbport}/connect?ip=localhost&port={app.state.port}")
@@ -145,6 +135,19 @@ def processar_cliente(conn, db_path):
         print(f"Erro ao receber: {e}")
     finally:
         conn.close()
+
+def servidor(db_path, port_queue):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(("", 0))
+    port = s.getsockname()[1]
+    port_queue.put(port)
+    s.listen()
+    print(f"[SERVIDOR] Escutando na porta TCP {port}")
+    while True:
+        conn, _ = s.accept()
+        p = Process(target=processar_cliente, args=(conn, db_path))
+        p.daemon = True
+        p.start()
 
 def iniciar_socket_servidor(db_path):
     port_queue = Queue()
