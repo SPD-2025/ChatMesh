@@ -74,3 +74,9 @@ Desenvolver uma solução computacional que explore os conceitos de paralelismo 
 
 [Markdown Guide](https://www.markdownguide.org/cheat-sheet/)
 a
+
+```bash
+python app.py --name Peer-1 --webport 8000
+python app.py --name Peer-2 --webport 8001
+python app.py --name Peer-3 --webport 8002
+```
