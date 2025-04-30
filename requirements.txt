@@ -1,5 +1,5 @@
 fastapi
 uvicorn[standard]
-jinja2
 aiofiles
+jinja2
 python-multipart
