@@ -71,7 +71,7 @@ def carregar_mensagens(db_path):
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request, "meu_peer": app.state.peer_name, "porta_tcp": app.state.port})
-
+    
 @app.get("/api/mensagens")
 async def api_mensagens():
     return carregar_mensagens(app.state.db_path)

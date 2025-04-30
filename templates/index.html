@@ -27,32 +27,7 @@
   </div>
 
   <script>
-    document.getElementById("formConnect").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const ip = document.getElementById("ip").value;
-  const port = document.getElementById("port").value;
-
-  sessionStorage.setItem("ultimoIP", ip);
-  sessionStorage.setItem("ultimaPorta", port);
-
-  const res = await fetch(`/connect?ip=${ip}&port=${port}&callback=${location.hostname}&cbport=${PORTA_TCP_LOCAL}`)
-  const result = await res.json();
-  alert(result.status || result.erro || "Erro desconhecido");
-  atualizarMensagens();
-});
-
-// reconectar automaticamente se houver dados salvos
-const ipSalvo = sessionStorage.getItem("ultimoIP");
-const portaSalva = sessionStorage.getItem("ultimaPorta");
-
-if (ipSalvo && portaSalva) {
-  fetch(`/connect?ip=${ipSalvo}&port=${portaSalva}`)
-    .then(res => res.json())
-    .then(r => {
-      console.log("Reconectado automaticamente:", r);
-      atualizarMensagens();
-    });
-}
+    const PORTA_TCP = {{ porta_tcp }};
 
     async function atualizarMensagens() {
       const r = await fetch("/api/mensagens");
@@ -66,9 +41,8 @@ if (ipSalvo && portaSalva) {
 
     const socket = new WebSocket(`ws://${location.host}/ws`);
     socket.onmessage = (e) => {
-      if (e.data === "update") {
-        atualizarMensagens();
-      } else if (e.data.startsWith("[status]")) {
+      if (e.data === "update") atualizarMensagens();
+      if (e.data.startsWith("[status]")) {
         document.getElementById("peerLabel").innerText = e.data;
       }
     };
@@ -87,14 +61,27 @@ if (ipSalvo && portaSalva) {
       e.preventDefault();
       const ip = document.getElementById("ip").value;
       const port = document.getElementById("port").value;
-      const res = await fetch(`/connect?ip=${ip}&port=${port}`);
+
+      sessionStorage.setItem("ultimoIP", ip);
+      sessionStorage.setItem("ultimaPorta", port);
+
+      const res = await fetch(`/connect?ip=${ip}&port=${port}&callback=${location.hostname}&cbport=${PORTA_TCP}`);
       const result = await res.json();
       alert(result.status || result.erro || "Erro desconhecido");
       atualizarMensagens();
     });
 
+    // Auto preencher campos com último peer conectado
+    document.addEventListener("DOMContentLoaded", () => {
+      const ip = sessionStorage.getItem("ultimoIP");
+      const port = sessionStorage.getItem("ultimaPorta");
+      if (ip) document.getElementById("ip").value = ip;
+      if (port) document.getElementById("port").value = port;
+    });
+
+    // Atualiza automaticamente o chat a cada 3 segundos
+    setInterval(atualizarMensagens, 3000);
     atualizarMensagens();
-    setInterval(atualizarMensagens, 3000); // Atualiza automaticamente a cada 3 segundos
   </script>
 </body>
 </html>
