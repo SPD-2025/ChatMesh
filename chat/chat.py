@@ -120,6 +120,17 @@ def servidor_receber():
         conn.close()
 
 if __name__ == "__main__":
+    from multiprocessing import Process
+    import time
+    import os
+
+    os.makedirs("/logs", exist_ok=True)
+
     servidor = Process(target=servidor_receber)
+    cliente = Process(target=cliente_enviar)
+
     servidor.start()
+    cliente.start()
+
     servidor.join()
+    cliente.join()
