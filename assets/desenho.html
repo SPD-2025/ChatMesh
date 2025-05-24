@@ -107,6 +107,47 @@
   <div class="text-center section-title">
     <h5 class="text-muted"><i class="fas fa-bolt"></i> Suporte a escalabilidade horizontal e sincronização ponto-a-ponto entre nós</h5>
   </div>
+<div class="container my-5">
+  <h3 class="text-center mb-4"><i class="fas fa-project-diagram me-2"></i>Fluxograma da Arquitetura P2P</h3>
+  <div class="mermaid">
+    graph TD
+        subgraph Peer_1 [Peer 1 - Terminal de Envio]
+            A1[Interface Terminal<br/>Envio de Mensagens]
+            A2[Log Local]
+        end
+
+        subgraph Peer_2 [Peer 2 - Sincronizador]
+            B1[Recepção de Mensagens]
+            B2[Sincronização de Histórico]
+            B3[Log Local]
+        end
+
+        subgraph Peer_3 [Peer 3 - Tolerância a Falhas]
+            C1[Reconexão]
+            C2[Recuperação de Mensagens]
+            C3[Log Local]
+        end
+
+        A1 <--> B1
+        A1 <--> C1
+        B1 <--> C1
+
+        B2 --> A2
+        B2 --> C3
+
+        A1 --> A2
+        B1 --> B3
+        C2 --> C3
+
+        C1 --> C2
+  </div>
+</div>
+
+  <script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true });
+  
+</script>
 
 </body>
 </html>
