@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Arquitetura ChatMesh - Projeto SPD</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Bootstrap e FontAwesome -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <style>
@@ -50,11 +51,16 @@
 
   <div class="row justify-content-center text-center">
     <div class="col-md-3 node">
-      <h5><i class="fas fa-user-terminal text-primary"></i> Peer 1</h5>
-      <p>Interface de envio de mensagens<br>Conecta a múltiplos peers e armazena logs</p>
+      <h5>
+        <i class="fas fa-sync-alt text-success"></i> 
+        <i class="fas fa-redo text-warning"></i>
+        Peer 1
+    </h5>
+      <p>Sincronizador<br>Recebe Mensagens Anteriores</p>
       <div class="d-flex justify-content-center flex-wrap">
-        <span class="tech"><i class="fab fa-python"></i> Python</span>
-        <span class="tech"><i class="fas fa-terminal"></i> Socket TCP</span>
+        
+        <span class="tech"><i class="fas fa-clock"></i> Sincronização</span>
+        <span class="tech"><i class="fas fa-link"></i> Reconexão</span>        
         <span class="tech"><i class="fas fa-file-alt"></i> Log Local</span>
       </div>
     </div>
@@ -64,12 +70,15 @@
     </div>
 
     <div class="col-md-3 node">
-      <h5><i class="fas fa-sync-alt text-success"></i> Peer 2</h5>
-      <p>Recebe mensagens e sincroniza o histórico com outros peers</p>
+      <h5>
+        <i class="fas fa-sync-alt text-success"></i> 
+        <i class="fas fa-redo text-warning"></i>
+    </h5>
+      <p>Sincronizador<br>Recebe Mensagens Anteriores</p>
       <div class="d-flex justify-content-center flex-wrap">
-        <span class="tech"><i class="fas fa-code-branch"></i> Multiprocessing</span>
         <span class="tech"><i class="fas fa-clock"></i> Sincronização</span>
-        <span class="tech"><i class="fas fa-database"></i> Backup Local</span>
+        <span class="tech"><i class="fas fa-link"></i> Reconexão</span>
+        <span class="tech"><i class="fas fa-file-alt"></i> Log Local</span>
       </div>
     </div>
 
@@ -78,21 +87,28 @@
     </div>
 
     <div class="col-md-3 node">
-      <h5><i class="fas fa-redo text-warning"></i> Peer 3</h5>
-      <p>Capaz de reconectar após falha e recuperar histórico</p>
+      <h5>
+        <i class="fas fa-sync-alt text-success"></i> 
+        <i class="fas fa-redo text-warning"></i>
+         Peer 3
+        </h5>
+      <p>Sincronizador<br>Recebe Mensagens Anteriores</p>
       <div class="d-flex justify-content-center flex-wrap">
-        <span class="tech"><i class="fas fa-heartbeat"></i> Tolerância a Falhas</span>
+                <span class="tech"><i class="fas fa-clock"></i> Sincronização</span>
         <span class="tech"><i class="fas fa-link"></i> Reconexão</span>
-        <span class="tech"><i class="fas fa-chart-line"></i> Métricas</span>
+        <span class="tech"><i class="fas fa-file-alt"></i> Log Local</span>
       </div>
     </div>
   </div>
 
   <div class="text-center section-title">
-    <h4><i class="fas fa-layer-group"></i> Arquitetura Técnica</h4>
+    <h4><i class="fas fa-layer-group"></i> Estrutura e Arquitetura</h4>
     <p class="text-muted mb-2">Baseada em rede mesh com comunicação descentralizada</p>
     <div class="d-flex justify-content-center flex-wrap">
+        <span class="tech"><i class="fab fa-python"></i> Python</span>
       <span class="tech"><i class="fas fa-project-diagram"></i> P2P Full Mesh</span>
+      <span class="tech"><i class="fas fa-heartbeat"></i> Tolerância a Falhas</span>
+      <span class="tech"><i class="fas fa-terminal"></i> Socket TCP</span>
       <span class="tech"><i class="fas fa-cogs"></i> Threads/Multiprocessing</span>
       <span class="tech"><i class="fas fa-server"></i> Docker Containers</span>
       <span class="tech"><i class="fas fa-network-wired"></i> Rede Virtual Docker</span>
@@ -100,54 +116,62 @@
   </div>
 
   <div class="text-center section-title">
-    <h4><i class="fas fa-tools"></i> Tecnologias Utilizadas</h4>
-    <p class="infra">Python, Sockets, Multiprocessing, FastAPI (interface), Docker, Docker Compose</p>
+    <h4><i class="fas fa-project-diagram"></i> Fluxograma da Arquitetura P2P</h4>
+    <div class="mermaid text-start" style="background: #ffffff; border: 1px solid #dee2e6; padding: 1rem; border-radius: 0.5rem;">
+      graph TD
+    subgraph Peer_1 [Peer 1]
+        A1[Sincronizador<br>Recebe Mensagens Anteriores]
+        A2[Interface Terminal<br/>Envio de Mensagens]
+        A3[Log Local]
+    end
+
+    subgraph Peer_2 [Peer 2]
+        B1[Sincronizador<br>Recebe Mensagens Anteriores]
+        B2[Interface Terminal<br/>Envio de Mensagens]
+        B3[Log Local]
+        
+    end
+
+    subgraph Peer_3 [Peer 3]
+        C1[Sincronizador<br>Recebe Mensagens Anteriores]
+        C2[Interface Terminal<br/>Envio de Mensagens]
+        C3[Log Local]
+    end
+    %% Sincronizações
+    A1 --> B1
+    B1 --> A1
+
+    B1 --> C1
+    C1 --> B1
+
+    A1 --> C1
+    C1 --> A1
+
+    %% Comunicação entre peers (Mesh)
+    A2 --> B2
+    A2 --> C2
+
+    B2 --> A2
+    B2 --> C2
+
+    C2 --> A2
+    C2 --> B2
+
+    %% Logs locais
+    A2 --> A3
+    B2 --> B3
+    C2 --> C3
+    </div>
   </div>
 
   <div class="text-center section-title">
     <h5 class="text-muted"><i class="fas fa-bolt"></i> Suporte a escalabilidade horizontal e sincronização ponto-a-ponto entre nós</h5>
   </div>
-<div class="container my-5">
-  <h3 class="text-center mb-4"><i class="fas fa-project-diagram me-2"></i>Fluxograma da Arquitetura P2P</h3>
-  <div class="mermaid">
-    graph TD
-        subgraph Peer_1 [Peer 1 - Terminal de Envio]
-            A1[Interface Terminal<br/>Envio de Mensagens]
-            A2[Log Local]
-        end
 
-        subgraph Peer_2 [Peer 2 - Sincronizador]
-            B1[Recepção de Mensagens]
-            B2[Sincronização de Histórico]
-            B3[Log Local]
-        end
-
-        subgraph Peer_3 [Peer 3 - Tolerância a Falhas]
-            C1[Reconexão]
-            C2[Recuperação de Mensagens]
-            C3[Log Local]
-        end
-
-        A1 <--> B1
-        A1 <--> C1
-        B1 <--> C1
-
-        B2 --> A2
-        B2 --> C3
-
-        A1 --> A2
-        B1 --> B3
-        C2 --> C3
-
-        C1 --> C2
-  </div>
-</div>
-
+  <!-- Mermaid.js CDN -->
   <script type="module">
-  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-  mermaid.initialize({ startOnLoad: true });
-  
-</script>
-
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+  </script>
 </body>
 </html>
