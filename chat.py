@@ -68,7 +68,13 @@ def carregar_novas_mensagens(ultima_id):
     conn.close()
     return rows
 
-def replicar_para_outros_peers(mensagem, origem_ip):
+def replicar_para_outros_peers(mensagem, origem=None):
+    """Replica a mensagem para todos os peers conhecidos.
+
+    Se ``origem`` for informado como uma tupla ``(ip, porta)``, evita reenviar
+    para esse peer.
+    """
+
     for endereco in PEERS:
         try:
             ip, port = endereco.split(":")
@@ -76,8 +82,10 @@ def replicar_para_outros_peers(mensagem, origem_ip):
         except ValueError:
             logging.error(f"Endereco invalido: {endereco}")
             continue
-        if ip == origem_ip and port == PORTA_RECEBIMENTO:
+        if origem and ip == origem[0] and port == origem[1]:
             continue
+
+
         try:
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             client_socket.connect((ip, port))
@@ -175,7 +183,6 @@ def servidor_receber(config):
     PEERS = config["peers"]
     DB_PATH = config["db_path"]
 
-
     inicializar_banco()
 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -197,6 +204,17 @@ def servidor_receber(config):
                 if novo_peer and novo_peer not in PEERS:
                     PEERS.append(novo_peer)
                     logging.info(f"Novo peer adicionado: {novo_peer}")
+                    # Responde com nosso endereco para estabelecer conexao
+                    try:
+                        ip_resp, port_resp = novo_peer.split(":")
+                        port_resp = int(port_resp)
+                        resposta = f"{HELLO_PREFIX}{HOST_RECEBIMENTO}:{PORTA_RECEBIMENTO}".encode()
+                        r_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                        r_sock.connect((ip_resp, port_resp))
+                        r_sock.sendall(resposta)
+                        r_sock.close()
+                    except Exception as e:
+                        logging.error(f"Erro respondendo hello para {novo_peer}: {e}")
                 conn.close()
                 continue
 
@@ -211,7 +229,9 @@ def servidor_receber(config):
                 salvar_mensagem(remetente, conteudo)
 
                 if not is_replicated:
-                    replicar_para_outros_peers(mensagem_pura, origem_ip=addr[0])
+
+                    replicar_para_outros_peers(mensagem_pura, origem=(addr[0], addr[1]))
+
             else:
                 logging.debug("Mensagem duplicada detectada, ignorando.")
 
