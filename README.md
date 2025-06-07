@@ -96,4 +96,3 @@ Desenvolver uma solução computacional que explore os conceitos de paralelismo 
 ### Link para dicas de Markdown
 
 [Markdown Guide](https://www.markdownguide.org/cheat-sheet/)
-a
