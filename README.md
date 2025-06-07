@@ -28,6 +28,7 @@ pip install -r requirements.txt
 
 Execute o script e siga as instruções interativas para definir seu nome, o IP e a porta de escuta e, opcionalmente, os peers de destino:
 
+
 ```bash
 python chat.py
 ```
@@ -36,6 +37,7 @@ Abra um terminal para cada instância desejada e informe dados diferentes quando
 Ao iniciar, o programa envia automaticamente uma mensagem de "hello" aos peers configurados
 com seu endereço de escuta. Assim, basta apontar para pelo menos um peer já existente e
 ele aprenderá seu endereço para as próximas replicações.
+
 
 ## Trabalho:
 

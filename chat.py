@@ -8,6 +8,7 @@ from multiprocessing import Process
 
 HELLO_PREFIX = "__HELLO__ "
 
+
 LOG_DIR = "logs"
 NOME_PEER = ""
 HOST_RECEBIMENTO = "0.0.0.0"
@@ -103,6 +104,7 @@ def enviar_hello_para_peers():
         except Exception as e:
             logging.error(f"Erro enviando hello para {ip}:{port}: {e}")
 
+
 def enviar_mensagem(conteudo):
     mensagem_formatada = f"{NOME_PEER}: {conteudo}"
     salvar_mensagem(NOME_PEER, conteudo)
@@ -173,6 +175,7 @@ def servidor_receber(config):
     PEERS = config["peers"]
     DB_PATH = config["db_path"]
 
+
     inicializar_banco()
 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -196,6 +199,7 @@ def servidor_receber(config):
                     logging.info(f"Novo peer adicionado: {novo_peer}")
                 conn.close()
                 continue
+
             is_replicated = mensagem.startswith("[REPLICATED] ")
             mensagem_pura = mensagem[12:] if is_replicated else mensagem
 
