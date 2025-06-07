@@ -8,6 +8,7 @@ from multiprocessing import Process
 
 LOG_DIR = "logs"
 NOME_PEER = ""
+HOST_RECEBIMENTO = "0.0.0.0"
 PORTA_RECEBIMENTO = 5000
 PEERS = []
 DB_PATH = ""
@@ -120,8 +121,10 @@ def servidor_receber():
             if not mensagem_ja_existe(remetente, conteudo):
                 salvar_mensagem(remetente, conteudo)
 
-                if not is_replicated:
-                    replicar_para_outros_peers(mensagem_pura, origem_ip=addr[0])
+    server_socket.bind((HOST_RECEBIMENTO, PORTA_RECEBIMENTO))
+    logging.info(
+        f"Servidor escutando em {HOST_RECEBIMENTO}:{PORTA_RECEBIMENTO}..."
+    )
             else:
                 logging.debug("Mensagem duplicada detectada, ignorando.")
 
@@ -134,10 +137,16 @@ if __name__ == "__main__":
     os.makedirs(LOG_DIR, exist_ok=True)
 
     NOME_PEER = input("Seu nome ou apelido: ").strip() or socket.gethostname()
+
+    default_ip = socket.gethostbyname(socket.gethostname())
+    ip = input(f"IP para escutar (padr\u00e3o {default_ip}): ").strip()
+    HOST_RECEBIMENTO = ip or default_ip
+
     porta = input("Porta para escutar (padr\u00e3o 5000): ").strip()
     if porta:
         PORTA_RECEBIMENTO = int(porta)
-    print(f"Escutando na porta {PORTA_RECEBIMENTO}")
+    print(f"Escutando em {HOST_RECEBIMENTO}:{PORTA_RECEBIMENTO}")
+
     destinos = input(
         "Peers de destino (ip:porta separados por v\u00edrgula, opcional): "
     ).strip()
