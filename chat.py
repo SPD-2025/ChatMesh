@@ -154,6 +154,7 @@ def servidor_receber(config):
     PEERS = config["peers"]
     DB_PATH = config["db_path"]
 
+
     inicializar_banco()
 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -225,6 +226,7 @@ if __name__ == "__main__":
 
     servidor = Process(target=servidor_receber, args=(config,))
     cliente = Process(target=cliente_enviar, args=(config,))
+
 
     servidor.start()
     cliente.start()
