@@ -34,6 +34,10 @@ python chat.py
 ```
 
 Abra um terminal para cada instância desejada e informe dados diferentes quando solicitado.
+Ao iniciar, o programa envia automaticamente uma mensagem de "hello" aos peers configurados
+com seu endereço de escuta. Assim, basta apontar para pelo menos um peer já existente e
+ele aprenderá seu endereço para as próximas replicações.
+
 
 ## Trabalho:
 

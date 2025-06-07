@@ -6,6 +6,9 @@ import logging
 import curses
 from multiprocessing import Process
 
+HELLO_PREFIX = "__HELLO__ "
+
+
 LOG_DIR = "logs"
 NOME_PEER = ""
 HOST_RECEBIMENTO = "0.0.0.0"
@@ -83,6 +86,24 @@ def replicar_para_outros_peers(mensagem, origem_ip):
             logging.info(f"Replicado para {ip}:{port}")
         except Exception as e:
             logging.error(f"Erro replicando para {ip}:{port}: {e}")
+
+def enviar_hello_para_peers():
+    mensagem = f"{HELLO_PREFIX}{HOST_RECEBIMENTO}:{PORTA_RECEBIMENTO}"
+    for endereco in PEERS:
+        try:
+            ip, port = endereco.split(":")
+            port = int(port)
+        except ValueError:
+            logging.error(f"Endereco invalido: {endereco}")
+            continue
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect((ip, port))
+            s.sendall(mensagem.encode())
+            s.close()
+        except Exception as e:
+            logging.error(f"Erro enviando hello para {ip}:{port}: {e}")
+
 
 def enviar_mensagem(conteudo):
     mensagem_formatada = f"{NOME_PEER}: {conteudo}"
@@ -164,11 +185,21 @@ def servidor_receber(config):
         f"Servidor escutando em {HOST_RECEBIMENTO}:{PORTA_RECEBIMENTO}..."
     )
 
+    enviar_hello_para_peers()
+
     while True:
         conn, addr = server_socket.accept()
         data = conn.recv(1024)
         if data:
             mensagem = data.decode()
+            if mensagem.startswith(HELLO_PREFIX):
+                novo_peer = mensagem[len(HELLO_PREFIX):].strip()
+                if novo_peer and novo_peer not in PEERS:
+                    PEERS.append(novo_peer)
+                    logging.info(f"Novo peer adicionado: {novo_peer}")
+                conn.close()
+                continue
+
             is_replicated = mensagem.startswith("[REPLICATED] ")
             mensagem_pura = mensagem[12:] if is_replicated else mensagem
 
@@ -226,7 +257,6 @@ if __name__ == "__main__":
 
     servidor = Process(target=servidor_receber, args=(config,))
     cliente = Process(target=cliente_enviar, args=(config,))
-
 
     servidor.start()
     cliente.start()
