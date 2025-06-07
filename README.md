@@ -18,6 +18,23 @@ _Um chat distribuído P2P_
 
 ## Desenvolver um sistema de comunicação de mensagens chamado ChatMesh, onde os participantes se conectam diretamente entre si (modelo Peer-to-Peer), formando uma rede de troca de mensagens distribuída, sem servidor central.
 
+## Como executar
+
+Instale as dependências:
+
+```bash
+pip install -r requirements.txt
+```
+
+Abra um terminal para cada peer desejado e defina as variáveis de ambiente antes de iniciar o `chat.py`.
+Por exemplo:
+
+```bash
+PORTA_RECEBIMENTO=5001 PEER_NAME=Peer-1 PEER_DESTINO=localhost:5001 python chat.py
+```
+
+Repita o comando acima alterando a porta e o nome do peer para criar novas instâncias.
+
 ## Trabalho:
 
 Projeto de Desenvolvimento de Soluções com Sistemas Paralelos e Distribuídos
