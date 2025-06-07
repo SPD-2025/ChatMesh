@@ -8,6 +8,7 @@ from multiprocessing import Process
 
 HELLO_PREFIX = "__HELLO__ "
 
+
 LOG_DIR = "logs"
 NOME_PEER = ""
 HOST_RECEBIMENTO = "0.0.0.0"
@@ -73,6 +74,7 @@ def replicar_para_outros_peers(mensagem, origem=None):
     Se ``origem`` for informado como uma tupla ``(ip, porta)``, evita reenviar
     para esse peer.
     """
+
     for endereco in PEERS:
         try:
             ip, port = endereco.split(":")
@@ -80,9 +82,9 @@ def replicar_para_outros_peers(mensagem, origem=None):
         except ValueError:
             logging.error(f"Endereco invalido: {endereco}")
             continue
-
         if origem and ip == origem[0] and port == origem[1]:
             continue
+
 
         try:
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -109,6 +111,7 @@ def enviar_hello_para_peers():
             s.close()
         except Exception as e:
             logging.error(f"Erro enviando hello para {ip}:{port}: {e}")
+
 
 def enviar_mensagem(conteudo):
     mensagem_formatada = f"{NOME_PEER}: {conteudo}"
@@ -214,6 +217,7 @@ def servidor_receber(config):
                         logging.error(f"Erro respondendo hello para {novo_peer}: {e}")
                 conn.close()
                 continue
+
             is_replicated = mensagem.startswith("[REPLICATED] ")
             mensagem_pura = mensagem[12:] if is_replicated else mensagem
 
@@ -225,7 +229,9 @@ def servidor_receber(config):
                 salvar_mensagem(remetente, conteudo)
 
                 if not is_replicated:
+
                     replicar_para_outros_peers(mensagem_pura, origem=(addr[0], addr[1]))
+
             else:
                 logging.debug("Mensagem duplicada detectada, ignorando.")
 

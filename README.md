@@ -37,6 +37,7 @@ Ao iniciar, o programa envia automaticamente uma mensagem de "hello" aos peers c
 com seu endereço de escuta. Assim, basta apontar para pelo menos um peer já existente e
 ele aprenderá seu endereço para as próximas replicações.
 
+
 ## Trabalho:
 
 Projeto de Desenvolvimento de Soluções com Sistemas Paralelos e Distribuídos
