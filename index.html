@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arquitetura do DiscordiaUlbraChat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals (Beige, Dark Gray, Accent Blue) -->
+    <!-- Application Structure Plan: A dashboard-style layout with a central, interactive architectural diagram and a side panel for detailed explanations. Users can click on diagram components or navigation buttons to explore different architectural pillars (Discovery, Communication, DB, etc.). This promotes non-linear exploration and better understanding of component relationships compared to a static slide deck. -->
+    <!-- Visualization & Content Choices: The core visualization is an interactive diagram built with HTML/CSS, showing two peers and their connection types (UDP/TCP). Goal: Organize/Relationships. Interaction: Hover for tooltips, click to show details. Other "visualizations" are simplified diagrams (flowcharts, tables) for concepts like Threading and DB schema, also built with styled HTML divs. Goal: Organize/Inform. Interaction: None, they are static illustrations within their sections. This approach avoids SVG/Mermaid as required. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8;
+            color: #333;
+        }
+        .nav-item.active {
+            background-color: #E0E7FF;
+            color: #3730A3;
+            font-weight: 600;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        /* Custom styles for diagram lines */
+        .line {
+            position: absolute;
+            background-color: #9CA3AF;
+            transform-origin: 0 0;
+        }
+        .arrow-tip {
+            width: 0; 
+            height: 0; 
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+            position: absolute;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-white shadow-sm p-4">
+            <h1 class="text-2xl md:text-3xl font-bold text-center text-indigo-800">DiscordiaUlbraChat: Uma Visão Arquitetural</h1>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-grow container mx-auto p-4 md:p-8 flex flex-col lg:flex-row gap-8">
+
+            <!-- Left Panel: Navigation and Details -->
+            <aside class="w-full lg:w-1/3 xl:w-1/4 flex-shrink-0">
+                <div class="bg-white p-6 rounded-lg shadow-md sticky top-8">
+                    <h2 class="text-xl font-bold mb-4 text-gray-800">Pontos Chave da Arquitetura</h2>
+                    <nav id="navigation" class="space-y-2">
+                        <!-- Navigation items will be injected by JS -->
+                    </nav>
+
+                    <div id="details-panel" class="mt-6 border-t pt-6">
+                        <!-- Content sections will be injected by JS -->
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Right Panel: Interactive Diagram -->
+            <section class="w-full lg:w-2/3 xl:w-3/4">
+                <div class="bg-white p-6 md:p-8 rounded-lg shadow-md h-full">
+                    <h2 class="text-xl font-bold mb-6 text-center text-gray-800">Diagrama Interativo da Rede P2P</h2>
+                    <p class="text-center text-gray-500 mb-8 max-w-2xl mx-auto">Este diagrama ilustra como dois peers se comunicam. Clique nos componentes do diagrama ou use o menu à esquerda para explorar cada conceito em detalhe.</p>
+                    
+                    <div id="diagram-container" class="relative w-full h-[500px] md:h-[600px] flex justify-around items-center">
+                        <!-- Peers -->
+                        <div id="peer-a" class="flex flex-col items-center z-10">
+                            <svg class="w-16 h-16 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                            <span class="font-semibold mt-2">Peer A</span>
+                        </div>
+                        <div id="peer-b" class="flex flex-col items-center z-10">
+                            <svg class="w-16 h-16 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                            <span class="font-semibold mt-2">Peer B</span>
+                        </div>
+
+                        <!-- Diagram Labels & Lines (JS will position these) -->
+                        <div id="udp-label" data-section="discovery" class="diagram-label absolute text-center p-2 bg-amber-100 text-amber-800 border border-amber-300 rounded-md cursor-pointer hover:shadow-lg transition z-20">
+                            <h3 class="font-semibold">Descoberta de Peers</h3>
+                            <p class="text-sm">UDP Broadcast (Porta 50000)</p>
+                        </div>
+                        <div id="tcp-label" data-section="communication" class="diagram-label absolute text-center p-2 bg-sky-100 text-sky-800 border border-sky-300 rounded-md cursor-pointer hover:shadow-lg transition z-20">
+                           <h3 class="font-semibold">Comunicação Direta</h3>
+                            <p class="text-sm">Conexão TCP (Porta Dinâmica)</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const contentData = {
+        title: {
+            title: 'Introdução',
+            icon: '👋',
+            content: `
+                <h3 class="text-lg font-semibold mb-2 text-indigo-700">Bem-vindo ao DiscordiaUlbraChat</h3>
+                <p class="text-gray-600">
+                    Este projeto é uma demonstração de um aplicativo de chat Peer-to-Peer (P2P), onde os usuários podem se comunicar diretamente, sem a necessidade de um servidor central para gerenciar a troca de mensagens. Esta página interativa detalha os pontos chave da sua arquitetura.
+                </p>
+                <h4 class="font-semibold mt-4 mb-2">O Conceito P2P</h4>
+                <p class="text-gray-600">
+                    Em uma rede P2P, cada participante (ou "peer") atua como cliente e servidor ao mesmo tempo. Isso cria uma rede descentralizada, resiliente e que não depende de um único ponto de falha.
+                </p>
+            `
+        },
+        discovery: {
+            title: 'Descoberta de Peers',
+            icon: '�',
+            content: `
+                <h3 class="text-lg font-semibold mb-2 text-amber-700">O GPS da Rede P2P</h3>
+                <p class="text-gray-600 mb-4">
+                    Para que os usuários possam se comunicar, eles primeiro precisam se encontrar na rede. Este processo de "descoberta" é realizado através de broadcasts UDP (User Datagram Protocol), uma forma eficiente de enviar uma mensagem para todos na rede local.
+                </p>
+                <ul class="space-y-3 list-disc list-inside text-gray-700">
+                    <li><strong>Anúncio de Presença:</strong> Cada instância do chat envia periodicamente um "anúncio" (pacote UDP) para o endereço de broadcast <code class="bg-gray-200 p-1 rounded">255.255.255.255</code>.</li>
+                    <li><strong>Porta Fixa:</strong> Todos os anúncios são enviados e recebidos na mesma porta UDP fixa (<code class="bg-gray-200 p-1 rounded">50000</code>), garantindo que todos estejam na "mesma sintonia".</li>
+                    <li><strong>Lista de Peers:</strong> Quando um anúncio é recebido, as informações do remetente (IP, porta TCP e nome de usuário) são adicionadas a uma lista local de peers online (<code class="bg-gray-200 p-1 rounded">self.peers</code>).</li>
+                </ul>
+            `
+        },
+        communication: {
+            title: 'Comunicação Direta',
+            icon: '🔌',
+            content: `
+                <h3 class="text-lg font-semibold mb-2 text-sky-700">A Linha Direta entre Amigos</h3>
+                <p class="text-gray-600 mb-4">
+                    Após um peer ser descoberto, a comunicação para troca de mensagens, solicitações de amizade e respostas é feita através de uma conexão TCP (Transmission Control Protocol), que é confiável e orientada à conexão.
+                </p>
+                <ul class="space-y-3 list-disc list-inside text-gray-700">
+                    <li><strong>Servidor TCP:</strong> Cada peer roda seu próprio servidor TCP em uma porta dinâmica, esperando por conexões de entrada.</li>
+                    <li><strong>Cliente TCP:</strong> Para enviar uma mensagem, o peer remetente atua como um cliente TCP. Ele usa o IP e a porta TCP (obtidos via descoberta UDP) para se conectar diretamente ao servidor do destinatário.</li>
+                    <li><strong>Dados em JSON:</strong> Todas as informações trocadas (mensagens, tipos de requisição) são encapsuladas em formato JSON para fácil interpretação.</li>
+                </ul>
+            `
+        },
+        persistence: {
+            title: 'Persistência (SQLite)',
+            icon: '💾',
+            content: `
+                <h3 class="text-lg font-semibold mb-2 text-green-700">Memorizando Conversas</h3>
+                <p class="text-gray-600 mb-4">
+                    Para que o histórico de chat e a lista de amigos não se percam ao fechar o aplicativo, o DiscordiaUlbraChat utiliza um banco de dados local SQLite.
+                </p>
+                <p class="font-medium text-gray-800 mb-2">Tabelas Principais no arquivo <code class="bg-gray-200 p-1 rounded">chat.db</code>:</p>
+                <div class="space-y-2">
+                    <div class="bg-green-50 border border-green-200 p-2 rounded"><strong>profiles:</strong> Guarda o ID e nome de usuário local.</div>
+                    <div class="bg-green-50 border border-green-200 p-2 rounded"><strong>messages:</strong> Armazena todo o histórico de mensagens trocadas.</div>
+                    <div class="bg-green-50 border border-green-200 p-2 rounded"><strong>friends:</strong> Gerencia os relacionamentos de amizade e seus status.</div>
+                </div>
+            `
+        },
+        concurrency: {
+            title: 'Concorrência (Threading)',
+            icon: '⚙️',
+            content: `
+                <h3 class="text-lg font-semibold mb-2 text-purple-700">Mantendo o Chat Fluido</h3>
+                <p class="text-gray-600 mb-4">
+                    Para que a interface do usuário não congele enquanto o aplicativo espera por eventos de rede, o threading é essencial. Operações que podem demorar (como escutar a rede) são movidas para threads em segundo plano.
+                </p>
+                <ul class="space-y-3 list-disc list-inside text-gray-700">
+                    <li><strong>Thread da UI (Principal):</strong> Responsável por desenhar a interface e responder aos cliques do usuário.</li>
+                    <li><strong>Threads de Rede:</strong>
+                        <ul class="ml-6 mt-2 list-disc list-inside">
+                            <li>Uma thread para escutar broadcasts UDP (<code class="bg-gray-200 p-1 rounded">listen_for_peers</code>).</li>
+                            <li>Uma thread para o servidor TCP principal (<code class="bg-gray-200 p-1 rounded">start_tcp_server</code>).</li>
+                            <li>Uma <strong>nova thread</strong> é criada para cada conexão TCP aceita (<code class="bg-gray-200 p-1 rounded">handle_tcp_connection</code>), permitindo lidar com múltiplos clientes simultaneamente.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Comunicação Segura:</strong> A comunicação da thread de rede para a UI é feita de forma segura através do mecanismo de <strong>Sinais e Slots</strong> do PySide6.</li>
+                </ul>
+            `
+        },
+        resilience: {
+            title: 'Reenvio de Mensagens',
+            icon: '🔄',
+            content: `
+                <h3 class="text-lg font-semibold mb-2 text-rose-700">Garantindo a Entrega</h3>
+                <p class="text-gray-600 mb-4">
+                    Para lidar com falhas de conexão temporárias, um mecanismo de reenvio foi implementado. Se o envio de uma mensagem falhar, ela não é perdida.
+                </p>
+                <ol class="space-y-3 list-decimal list-inside text-gray-700">
+                    <li><strong>Falha no Envio:</strong> Se a conexão TCP falhar, a mensagem é adicionada a uma fila de "não enviadas" (<code class="bg-gray-200 p-1 rounded">self.unsent_messages</code>).</li>
+                    <li><strong>Timer de Reenvio:</strong> Um timer verifica esta fila periodicamente (a cada 10 segundos).</li>
+                    <li><strong>Tentativa de Reenvio:</strong> Se o destinatário estiver online, o aplicativo tenta reenviar a mensagem.</li>
+                    <li><strong>Sucesso:</strong> Se o reenvio for bem-sucedido, a mensagem é removida da fila.</li>
+                </ol>
+            `
+        }
+    };
+
+    const navigation = document.getElementById('navigation');
+    const detailsPanel = document.getElementById('details-panel');
+    const diagramLabels = document.querySelectorAll('.diagram-label');
+
+    let activeSectionId = 'title';
+
+    function initialize() {
+        // Populate navigation and details panels
+        Object.keys(contentData).forEach(key => {
+            const section = contentData[key];
+            
+            // Create nav item
+            const navButton = document.createElement('button');
+            navButton.className = 'nav-item w-full text-left px-4 py-2 rounded-md transition duration-150 ease-in-out hover:bg-gray-100';
+            navButton.dataset.section = key;
+            navButton.innerHTML = `<span class="mr-3">${section.icon}</span> ${section.title}`;
+            navigation.appendChild(navButton);
+
+            // Create content section
+            const contentDiv = document.createElement('div');
+            contentDiv.id = `content-${key}`;
+            contentDiv.className = 'content-section';
+            contentDiv.innerHTML = section.content;
+            detailsPanel.appendChild(contentDiv);
+        });
+
+        // Add event listeners
+        navigation.addEventListener('click', (e) => {
+            if (e.target.closest('button')) {
+                const sectionId = e.target.closest('button').dataset.section;
+                setActiveSection(sectionId);
+            }
+        });
+
+        diagramLabels.forEach(label => {
+            label.addEventListener('click', () => {
+                const sectionId = label.dataset.section;
+                setActiveSection(sectionId);
+            });
+        });
+        
+        window.addEventListener('resize', positionDiagramElements);
+
+        // Initial setup
+        positionDiagramElements();
+        setActiveSection('title');
+    }
+
+    function setActiveSection(sectionId) {
+        activeSectionId = sectionId;
+
+        // Update navigation
+        document.querySelectorAll('#navigation .nav-item').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.section === sectionId);
+        });
+
+        // Update content
+        document.querySelectorAll('#details-panel .content-section').forEach(sec => {
+            sec.classList.toggle('active', sec.id === `content-${sectionId}`);
+        });
+
+        // Update diagram highlight
+        diagramLabels.forEach(label => {
+            if (label.dataset.section === sectionId) {
+                label.classList.add('ring-2', 'ring-offset-2', 'ring-indigo-500');
+            } else {
+                label.classList.remove('ring-2', 'ring-offset-2', 'ring-indigo-500');
+            }
+        });
+    }
+    
+    // --- Diagram Positioning Logic ---
+    function positionDiagramElements() {
+        const container = document.getElementById('diagram-container');
+        if (!container) return;
+
+        const peerA = document.getElementById('peer-a');
+        const peerB = document.getElementById('peer-b');
+        const udpLabel = document.getElementById('udp-label');
+        const tcpLabel = document.getElementById('tcp-label');
+        
+        const containerRect = container.getBoundingClientRect();
+        const peerARect = peerA.getBoundingClientRect();
+        const peerBRect = peerB.getBoundingClientRect();
+
+        const p1 = { x: peerARect.right - containerRect.left, y: peerARect.top - containerRect.top + peerARect.height / 2 };
+        const p2 = { x: peerBRect.left - containerRect.left, y: peerBRect.top - containerRect.top + peerBRect.height / 2 };
+        
+        // Position Labels
+        udpLabel.style.left = `${containerRect.width / 2 - udpLabel.offsetWidth / 2}px`;
+        udpLabel.style.top = `${containerRect.height * 0.25 - udpLabel.offsetHeight / 2}px`;
+        
+        tcpLabel.style.left = `${containerRect.width / 2 - tcpLabel.offsetWidth / 2}px`;
+        tcpLabel.style.bottom = `${containerRect.height * 0.25 - tcpLabel.offsetHeight / 2}px`;
+
+        // Remove old lines
+        container.querySelectorAll('.line-wrapper').forEach(el => el.remove());
+        
+        // Draw UDP lines (dashed)
+        const udpLabelRect = udpLabel.getBoundingClientRect();
+        const udpTarget = { x: udpLabelRect.left - containerRect.left + udpLabelRect.width / 2, y: udpLabelRect.top - containerRect.top + udpLabelRect.height / 2 };
+        
+        createLine(container, p1, udpTarget, 'amber', true);
+        createLine(container, p2, udpTarget, 'amber', true);
+
+        // Draw TCP lines (solid)
+        const tcpLabelRect = tcpLabel.getBoundingClientRect();
+        const tcpTarget = { x: tcpLabelRect.left - containerRect.left + tcpLabelRect.width / 2, y: tcpLabelRect.top - containerRect.top + tcpLabelRect.height / 2 };
+
+        createLineWithArrows(container, p1, tcpTarget, 'sky');
+        createLineWithArrows(container, p2, tcpTarget, 'sky');
+    }
+
+    function createLine(container, p1, p2, color, dashed = false) {
+        const length = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+        const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
+        
+        const wrapper = document.createElement('div');
+        wrapper.className = 'line-wrapper absolute';
+
+        const line = document.createElement('div');
+        line.className = `line h-0.5 ${dashed ? 'bg-transparent' : `bg-${color}-400`}`;
+        if (dashed) {
+            line.style.backgroundImage = `linear-gradient(to right, ${color === 'amber' ? '#FBBF24' : '#7DD3FC'} 50%, transparent 50%)`;
+            line.style.backgroundSize = '10px 2px';
+        }
+        line.style.width = `${length}px`;
+        line.style.left = `${p1.x}px`;
+        line.style.top = `${p1.y}px`;
+        line.style.transform = `rotate(${angle}deg)`;
+        
+        wrapper.appendChild(line);
+        container.insertBefore(wrapper, container.firstChild);
+    }
+    
+    function createLineWithArrows(container, p1, p2, color) {
+        // Line from Peer A to center
+        createPartialLineWithArrow(container, p1, p2, color, true);
+        // Line from Peer B to center
+        createPartialLineWithArrow(container, p2, p1, color, true);
+    }
+    
+    function createPartialLineWithArrow(container, startPoint, endPoint, color, toCenter) {
+        const midPoint = { x: (startPoint.x + endPoint.x) / 2, y: (startPoint.y + endPoint.y) / 2 };
+        
+        const length = Math.sqrt(Math.pow(midPoint.x - startPoint.x, 2) + Math.pow(midPoint.y - startPoint.y, 2));
+        const angle = Math.atan2(midPoint.y - startPoint.y, midPoint.x - startPoint.x) * 180 / Math.PI;
+        
+        const wrapper = document.createElement('div');
+        wrapper.className = 'line-wrapper absolute';
+
+        const line = document.createElement('div');
+        line.className = `line h-0.5 bg-${color}-400`;
+        line.style.width = `${length}px`;
+        line.style.left = `${startPoint.x}px`;
+        line.style.top = `${startPoint.y}px`;
+        line.style.transform = `rotate(${angle}deg)`;
+        
+        const arrow = document.createElement('div');
+        arrow.className = `arrow-tip border-l-8 border-l-${color}-400`;
+        arrow.style.left = `${midPoint.x - 8}px`;
+        arrow.style.top = `${midPoint.y - 6}px`;
+        arrow.style.transform = `rotate(${angle}deg)`;
+
+        wrapper.appendChild(line);
+        wrapper.appendChild(arrow);
+        container.insertBefore(wrapper, container.firstChild);
+    }
+
+
+    initialize();
+});
+</script>
+
+</body>
+</html>
