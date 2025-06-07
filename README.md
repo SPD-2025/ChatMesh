@@ -26,6 +26,7 @@ Instale as dependências:
 pip install -r requirements.txt
 ```
 
+
 Execute o script e siga as instruções interativas para definir seu nome, a porta de escuta e os peers de destino:
 
 ```bash

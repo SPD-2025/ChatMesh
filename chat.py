@@ -12,57 +12,13 @@ PORTA_RECEBIMENTO = 5000
 PEERS = []
 DB_PATH = ""
 
+
 # Controle de mensagens únicas
 ultimas_mensagens = []
 MAX_MENSAGENS = 100
 
-def mensagem_ja_existe(remetente, conteudo):
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
-    cur.execute('''
-        SELECT COUNT(*) FROM mensagens
-        WHERE remetente = ? AND conteudo = ?
-    ''', (remetente, conteudo))
-    count = cur.fetchone()[0]
-    conn.close()
-    return count > 0
-
-
-def inicializar_banco():
-    os.makedirs(LOG_DIR, exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS mensagens (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            remetente TEXT,
-            conteudo TEXT
-        )
-    ''')
-    conn.commit()
-    conn.close()
-
-def salvar_mensagem(remetente, conteudo):
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
-    cur.execute('''
-        INSERT INTO mensagens (timestamp, remetente, conteudo)
-        VALUES (?, ?, ?)
-    ''', (time.strftime('%Y-%m-%d %H:%M:%S'), remetente, conteudo))
-    conn.commit()
-    conn.close()
-
-def carregar_novas_mensagens(ultima_id):
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT id, remetente, conteudo FROM mensagens WHERE id > ? ORDER BY id",
-        (ultima_id,),
-    )
-    rows = cur.fetchall()
-    conn.close()
-    return rows
+peers_cache = []
+peers_last_update = 0
 
 def replicar_para_outros_peers(mensagem, origem_ip):
     for endereco in PEERS:
