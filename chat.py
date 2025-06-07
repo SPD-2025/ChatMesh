@@ -8,62 +8,17 @@ from multiprocessing import Process
 
 LOG_DIR = "logs"
 NOME_PEER = ""
-HOST_RECEBIMENTO = "0.0.0.0"
 PORTA_RECEBIMENTO = 5000
 PEERS = []
 DB_PATH = ""
+
 
 # Controle de mensagens únicas
 ultimas_mensagens = []
 MAX_MENSAGENS = 100
 
-def mensagem_ja_existe(remetente, conteudo):
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
-    cur.execute('''
-        SELECT COUNT(*) FROM mensagens
-        WHERE remetente = ? AND conteudo = ?
-    ''', (remetente, conteudo))
-    count = cur.fetchone()[0]
-    conn.close()
-    return count > 0
-
-
-def inicializar_banco():
-    os.makedirs(LOG_DIR, exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS mensagens (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            remetente TEXT,
-            conteudo TEXT
-        )
-    ''')
-    conn.commit()
-    conn.close()
-
-def salvar_mensagem(remetente, conteudo):
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
-    cur.execute('''
-        INSERT INTO mensagens (timestamp, remetente, conteudo)
-        VALUES (?, ?, ?)
-    ''', (time.strftime('%Y-%m-%d %H:%M:%S'), remetente, conteudo))
-    conn.commit()
-    conn.close()
-
-def carregar_novas_mensagens(ultima_id):
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT id, remetente, conteudo FROM mensagens WHERE id > ? ORDER BY id",
-        (ultima_id,),
-    )
-    rows = cur.fetchall()
-    conn.close()
-    return rows
+peers_cache = []
+peers_last_update = 0
 
 def replicar_para_outros_peers(mensagem, origem_ip):
     for endereco in PEERS:
@@ -146,11 +101,9 @@ def servidor_receber():
     inicializar_banco()
 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind((HOST_RECEBIMENTO, PORTA_RECEBIMENTO))
+    server_socket.bind(('', PORTA_RECEBIMENTO))
     server_socket.listen()
-    logging.info(
-        f"Servidor escutando em {HOST_RECEBIMENTO}:{PORTA_RECEBIMENTO}..."
-    )
+    logging.info(f"Servidor escutando na porta {PORTA_RECEBIMENTO}...")
 
     while True:
         conn, addr = server_socket.accept()
@@ -181,16 +134,10 @@ if __name__ == "__main__":
     os.makedirs(LOG_DIR, exist_ok=True)
 
     NOME_PEER = input("Seu nome ou apelido: ").strip() or socket.gethostname()
-
-    default_ip = socket.gethostbyname(socket.gethostname())
-    ip = input(f"IP para escutar (padr\u00e3o {default_ip}): ").strip()
-    HOST_RECEBIMENTO = ip or default_ip
-
     porta = input("Porta para escutar (padr\u00e3o 5000): ").strip()
     if porta:
         PORTA_RECEBIMENTO = int(porta)
-    print(f"Escutando em {HOST_RECEBIMENTO}:{PORTA_RECEBIMENTO}")
-
+    print(f"Escutando na porta {PORTA_RECEBIMENTO}")
     destinos = input(
         "Peers de destino (ip:porta separados por v\u00edrgula, opcional): "
     ).strip()
