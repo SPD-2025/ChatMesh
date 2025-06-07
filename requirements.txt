@@ -1,1 +1,4 @@
-windows-curses; sys_platform == 'win32'
+windows-curses
+sys_platform == 'win32'
+PySide6==6.6.1
+cryptography==42.0.2 
