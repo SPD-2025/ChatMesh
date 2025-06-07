@@ -1,14 +1,12 @@
-# docker-compose.yml
 version: "3.8"
-
 services:
-  # Peer 1
   peer1:
     build: ./chat
     container_name: peer1
     environment:
       - PORTA_RECEBIMENTO=5001
       - PEER_NAME=Peer-1
+      - PEER_DESTINO=peer1:5001
     ports:
       - "5001:5001"
     volumes:
@@ -16,28 +14,13 @@ services:
     networks:
       - chatmesh-net
 
-  web1:
-    build: ./web
-    container_name: web1
-    ports:
-      - "8001:8001"
-    environment:
-      - FRONTEND_PORT=8001
-      - PEER_DESTINO=peer1:5001
-      - PEER_NAME=Peer-1
-    volumes:
-      - logs-volume:/logs
-    networks:
-      - chatmesh-net
-    command: uvicorn main:app --host 0.0.0.0 --port 8001
-
-  # Peer 2
   peer2:
     build: ./chat
     container_name: peer2
     environment:
       - PORTA_RECEBIMENTO=5002
       - PEER_NAME=Peer-2
+      - PEER_DESTINO=peer2:5002
     ports:
       - "5002:5002"
     volumes:
@@ -45,49 +28,19 @@ services:
     networks:
       - chatmesh-net
 
-  web2:
-    build: ./web
-    container_name: web2
-    ports:
-      - "8002:8002"
-    environment:
-      - FRONTEND_PORT=8002
-      - PEER_DESTINO=peer2:5002
-      - PEER_NAME=Peer-2
-    volumes:
-      - logs-volume:/logs
-    networks:
-      - chatmesh-net
-    command: uvicorn main:app --host 0.0.0.0 --port 8002
-
-  # Peer 3
   peer3:
     build: ./chat
     container_name: peer3
     environment:
       - PORTA_RECEBIMENTO=5003
       - PEER_NAME=Peer-3
+      - PEER_DESTINO=peer3:5003
     ports:
       - "5003:5003"
     volumes:
       - logs-volume:/logs
     networks:
       - chatmesh-net
-
-  web3:
-    build: ./web
-    container_name: web3
-    ports:
-      - "8003:8003"
-    environment:
-      - FRONTEND_PORT=8003
-      - PEER_DESTINO=peer3:5003
-      - PEER_NAME=Peer-3
-    volumes:
-      - logs-volume:/logs
-    networks:
-      - chatmesh-net
-    command: uvicorn main:app --host 0.0.0.0 --port 8003
 
 volumes:
   logs-volume:
