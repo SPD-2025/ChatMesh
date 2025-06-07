@@ -11,7 +11,7 @@ hostname = socket.gethostname()
 NOME_PEER = os.getenv("PEER_NAME", socket.gethostname())
 PORTA_RECEBIMENTO = int(os.getenv("PORTA_RECEBIMENTO", 5000))
 
-LOG_DIR = "/logs"
+LOG_DIR = "logs"
 DB_PATH = os.path.join(LOG_DIR, f"{NOME_PEER}.db")
 PEER_DESTINO = os.getenv("PEER_DESTINO", f"localhost:{PORTA_RECEBIMENTO}")
 
@@ -197,7 +197,7 @@ if __name__ == "__main__":
     import time
     import os
 
-    os.makedirs("/logs", exist_ok=True)
+    os.makedirs("logs", exist_ok=True)
 
     servidor = Process(target=servidor_receber)
     cliente = Process(target=cliente_enviar)
