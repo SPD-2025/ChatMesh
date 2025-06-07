@@ -9,4 +9,3 @@ COPY . .
 
 RUN chmod +x entrypoint.sh \
     && sed -i 's/\r$//' entrypoint.sh
-ENTRYPOINT ["/bin/sh", "entrypoint.sh"]
