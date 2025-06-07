@@ -4,6 +4,7 @@ import time
 import sqlite3
 import logging
 import curses
+import threading
 from multiprocessing import Process
 
 HELLO_PREFIX = "__HELLO__ "
@@ -184,6 +185,13 @@ def servidor_receber(config):
     DB_PATH = config["db_path"]
 
     inicializar_banco()
+
+    def _hello_loop(interval=10):
+        while True:
+            enviar_hello_para_peers()
+            time.sleep(interval)
+
+    threading.Thread(target=_hello_loop, daemon=True).start()
 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((HOST_RECEBIMENTO, PORTA_RECEBIMENTO))
