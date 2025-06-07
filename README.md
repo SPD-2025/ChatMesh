@@ -26,14 +26,14 @@ Instale as dependências:
 pip install -r requirements.txt
 ```
 
-Abra um terminal para cada peer desejado e defina as variáveis de ambiente antes de iniciar o `chat.py`.
-Por exemplo:
+
+Execute o script e siga as instruções interativas para definir seu nome, a porta de escuta e os peers de destino:
 
 ```bash
-PORTA_RECEBIMENTO=5001 PEER_NAME=Peer-1 PEER_DESTINO=localhost:5001 python chat.py
+python chat.py
 ```
 
-Repita o comando acima alterando a porta e o nome do peer para criar novas instâncias.
+Abra um terminal para cada instância desejada e informe dados diferentes quando solicitado.
 
 ## Trabalho:
 
