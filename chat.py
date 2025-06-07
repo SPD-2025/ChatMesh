@@ -139,10 +139,21 @@ def interface_curses(stdscr):
             buffer += chr(ch)
 
 
-def cliente_enviar():
+def cliente_enviar(config):
+    global NOME_PEER, PEERS, DB_PATH
+    NOME_PEER = config["name"]
+    PEERS = config["peers"]
+    DB_PATH = config["db_path"]
     curses.wrapper(interface_curses)
 
-def servidor_receber():
+def servidor_receber(config):
+    global HOST_RECEBIMENTO, PORTA_RECEBIMENTO, PEERS, DB_PATH, NOME_PEER
+    NOME_PEER = config["name"]
+    HOST_RECEBIMENTO = config["host"]
+    PORTA_RECEBIMENTO = config["port"]
+    PEERS = config["peers"]
+    DB_PATH = config["db_path"]
+
     inicializar_banco()
 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -204,8 +215,16 @@ if __name__ == "__main__":
         format="%(asctime)s %(levelname)s: %(message)s",
     )
 
-    servidor = Process(target=servidor_receber)
-    cliente = Process(target=cliente_enviar)
+    config = {
+        "name": NOME_PEER,
+        "host": HOST_RECEBIMENTO,
+        "port": PORTA_RECEBIMENTO,
+        "peers": PEERS,
+        "db_path": DB_PATH,
+    }
+
+    servidor = Process(target=servidor_receber, args=(config,))
+    cliente = Process(target=cliente_enviar, args=(config,))
 
     servidor.start()
     cliente.start()
